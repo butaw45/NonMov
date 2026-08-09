@@ -46,6 +46,11 @@ Dokumen PRD lengkap: `docs/prd-tmdb-netflix-clone.md`.
 4. **Git mutation butuh konfirmasi** — sebelum `git commit`/`push`/operasi git
    lain yang mengubah riwayat, selalu minta konfirmasi user dulu.
 
+5. **Cek update teknologi selalu via Context7** — setiap kali user menanyakan
+   status versi, update, atau fitur terbaru framework/dependensi, WAJIB gunakan
+   Context7 (`resolve-library-id` → `query-docs`) untuk data terbaru, lalu
+   konfirmasi silang dengan `npm outdated`. Jangan mengandalkan ingatan model.
+
 ## Catatan
 
 - **Dua sistem graf — pembagian tugas:**
