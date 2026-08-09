@@ -39,8 +39,6 @@ Dokumen PRD lengkap: `docs/prd-tmdb-netflix-clone.md`.
    b. Jika ada perubahan pada file sumber, SELALU re-index:
       `index_repository(repo_path="<root proyek ini>", mode="moderate")`
    c. Nama project di graph: `C-Users-Haris-Documents-Local-Projek-NonMov`.
-   Catatan: yang dimaksud "graphify" oleh user adalah knowledge graph
-   codebase-memory-mcp ini — bukan output statis lama di `graphify-out/`.
 
 3. **Jangan pernah commit `.env`** — berisi API key TMDB. Sudah ter-gitignore;
    pastikan tetap tidak ter-stage saat `git add`.
@@ -50,7 +48,13 @@ Dokumen PRD lengkap: `docs/prd-tmdb-netflix-clone.md`.
 
 ## Catatan
 
-- `graphify-out/` = output statis dari tool lama (hanya analisis PRD, per 09 Agu
-  2026 08:06). Sudah di-gitignore dan **bukan** sumber kebenaran knowledge graph.
+- **Dua sistem graf — pembagian tugas:**
+  - **codebase-memory-mcp** = graf kode LIVE (sumber kebenaran struktur kode:
+    fungsi, call graph, arsitektur). WAJIB di-re-index tiap ada perubahan file
+    sumber (lihat aturan #2).
+  - **Graphify CLI** (`graphify-out/`) = graf konsep/dokumen + viz HTML statis,
+    snapshot per run via skill `/graphify` (terpasang global di
+    `~/.agents/skills/graphify/`). Sudah di-gitignore; bukan sumber kebenaran
+    struktur kode.
 - Remote repo: https://github.com/butaw45/NonMov.git (branch utama: `main`)
 - Identitas git diset **lokal** di repo ini: Muhammad Haris <hariis12k@gmail.com>
