@@ -34,7 +34,7 @@ export default function Hero({ item }) {
           <span>{type === 'tv' ? 'Series' : 'Film'}</span>
         </div>
         <p className="hero-overview">
-          {item.overview || 'Sinopsis belum tersedia dalam Bahasa Indonesia.'}
+          {item.overview || 'Sinopsis belum tersedia.'}
         </p>
         <div className="hero-actions">
           <Link className="btn btn-primary" to={`/judul/${type}/${item.id}`}>

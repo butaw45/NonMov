@@ -18,6 +18,8 @@ export default function Detail() {
   const [season, setSeason] = useState(null)
   const [eps, setEps] = useState(null)
   const [epsLoading, setEpsLoading] = useState(false)
+  // Koleksi/saga untuk film: undefined = belum dicek, null = tidak punya koleksi
+  const [coll, setColl] = useState(undefined)
   const list = useWatchlist()
 
   useTitle(detail ? detail.title || detail.name : null)
@@ -29,6 +31,7 @@ export default function Detail() {
     setError(null)
     setSeason(null)
     setEps(null)
+    setColl(undefined)
     const fetcher = kind === 'tv' ? tmdb.tv(id) : tmdb.movie(id)
     fetcher
       .then((d) => { if (on) setDetail(d) })
@@ -60,6 +63,20 @@ export default function Detail() {
     return () => { on = false }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [season, detail?.id])
+
+  // Film tidak punya episode — sebagai gantinya tampilkan bagian-bagian saga
+  // dari koleksi TMDB (mis. sekuel satu seri), urut tanggal rilis.
+  useEffect(() => {
+    if (kind !== 'movie' || !detail) return
+    const c = detail.belongs_to_collection
+    if (!c) { setColl(null); return }
+    let on = true
+    tmdb.collection(c.id)
+      .then((d) => { if (on) setColl(d) })
+      .catch(() => { if (on) setColl(null) })
+    return () => { on = false }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [kind, detail?.id])
 
   const trailer = useMemo(() => {
     const vids = detail?.videos?.results || []
@@ -94,6 +111,12 @@ export default function Detail() {
   const cast = (detail.credits?.cast || []).slice(0, 15)
   const similar = (detail.recommendations?.results || []).filter((x) => x.poster_path)
   const seasons = (detail.seasons || []).filter((s) => s.season_number > 0)
+  // Bagian saga urut tanggal rilis; yang tanpa tanggal ditaruh di akhir
+  const collParts = coll?.parts
+    ? [...coll.parts].sort((a, b) =>
+        String(a.release_date || '9999').localeCompare(String(b.release_date || '9999'))
+      )
+    : []
 
   return (
     <div>
@@ -137,7 +160,7 @@ export default function Detail() {
             </div>
 
             <p className="detail-overview">
-              {detail.overview || 'Sinopsis belum tersedia dalam Bahasa Indonesia.'}
+              {detail.overview || 'Sinopsis belum tersedia.'}
             </p>
 
             <div className="detail-actions">
@@ -265,6 +288,70 @@ export default function Detail() {
                     </div>
                   </article>
                 ))}
+              </div>
+            )}
+          </section>
+        )}
+
+        {kind === 'movie' && (
+          <section>
+            <div className="row-head">
+              <span className="kicker">{coll ? 'Satu saga' : 'Daftar tayangan'}</span>
+              <h2>{coll ? `Koleksi ${coll.name}` : 'Film Utama'}</h2>
+            </div>
+            {coll === undefined && detail.belongs_to_collection && (
+              <p className="muted">Memuat daftar koleksi…</p>
+            )}
+            {coll !== undefined && (
+              <div className="ep-list">
+                {collParts.length > 0 ? (
+                  collParts.map((p, i) => {
+                    const current = p.id === detail.id
+                    const card = (
+                      <>
+                        <div className="still">
+                          {(p.backdrop_path || p.poster_path) && (
+                            <img loading="lazy" src={img(p.backdrop_path || p.poster_path, 'w300')} alt="" />
+                          )}
+                          <span className="epnum">FILM {i + 1}</span>
+                        </div>
+                        <div>
+                          <div className="ep-name">
+                            {p.title}
+                            {p.release_date && (
+                              <span className="dur">{String(p.release_date).slice(0, 4)}</span>
+                            )}
+                            {current && <span className="dur">· Sedang dibuka</span>}
+                          </div>
+                          {p.overview && <p className="ep-over">{p.overview}</p>}
+                        </div>
+                      </>
+                    )
+                    return current ? (
+                      <article className="ep" key={p.id}>{card}</article>
+                    ) : (
+                      <Link className="ep-link" to={`/judul/movie/${p.id}`} key={p.id}>
+                        <article className="ep">{card}</article>
+                      </Link>
+                    )
+                  })
+                ) : (
+                  <article className="ep">
+                    <div className="still">
+                      {detail.backdrop_path && (
+                        <img loading="lazy" src={img(detail.backdrop_path, 'w300')} alt="" />
+                      )}
+                      <span className="epnum">FILM</span>
+                    </div>
+                    <div>
+                      <div className="ep-name">
+                        {title}
+                        {runtime && <span className="dur">{runtime}</span>}
+                      </div>
+                      {detail.overview && <p className="ep-over">{detail.overview}</p>}
+                    </div>
+                  </article>
+                )}
               </div>
             )}
           </section>

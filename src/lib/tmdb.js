@@ -44,7 +44,9 @@ function cacheWrite(key, data) {
 }
 
 async function request(path, params = {}) {
-  const merged = { api_key: API_KEY, language: 'id-ID', include_adult: 'false', ...params }
+  // Teks TMDB sengaja diambil en-US: sumber utamanya memang Inggris dan
+  // terjemahan id-ID sering tidak lengkap (mis. sinopsis episode kosong).
+  const merged = { api_key: API_KEY, language: 'en-US', include_adult: 'false', ...params }
   const search = new URLSearchParams()
   for (const [k, v] of Object.entries(merged)) {
     if (v !== undefined && v !== null && v !== '') search.set(k, String(v))
@@ -78,6 +80,7 @@ export const tmdb = {
   movie: (id) => request(`/movie/${id}`, { append_to_response: 'credits,recommendations,videos' }),
   tv: (id) => request(`/tv/${id}`, { append_to_response: 'credits,recommendations,videos' }),
   season: (tvId, num) => request(`/tv/${tvId}/season/${num}`),
+  collection: (id) => request(`/collection/${id}`),
   genres: (type) => request(`/genre/${type}/list`),
   discover: (type, params = {}) => request(`/discover/${type}`, params),
   providers: (type, id) => request(`/${type}/${id}/watch/providers`, { watch_region: 'ID' }),
