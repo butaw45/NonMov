@@ -51,6 +51,10 @@ Dokumen PRD lengkap: `docs/prd-tmdb-netflix-clone.md`.
    Context7 (`resolve-library-id` → `query-docs`) untuk data terbaru, lalu
    konfirmasi silang dengan `npm outdated`. Jangan mengandalkan ingatan model.
 
+6. **Tanya dulu saat ada pilihan** — setiap kali ada keputusan yang ambigu atau
+   lebih dari satu opsi yang masuk akal (UX, bahasa, arsitektur, dsb.), WAJIB
+   tanyakan ke user dulu sebelum memutuskan. Jangan memilih sepihak.
+
 ## Catatan
 
 - **Dua sistem graf — pembagian tugas:**
