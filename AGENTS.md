@@ -8,7 +8,7 @@ Dokumen PRD lengkap: `docs/prd-tmdb-netflix-clone.md`.
 
 ## Tech Stack
 
-- React 18 + Vite 6 (`@vitejs/plugin-react`), react-router-dom v6
+- React 19 + Vite 8 (`@vitejs/plugin-react`), react-router-dom v7
 - ArtPlayer + hls.js (video player HLS)
 - TMDB API — API key lewat `.env` (`VITE_TMDB_API_KEY`)
 - CSS murni di `src/styles/` (tanpa framework CSS)
