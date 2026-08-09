@@ -1,0 +1,247 @@
+/* ============================================================
+   Komponen: hero, baris katalog, kartu poster, top-10
+   ============================================================ */
+
+/* ---------- Hero ---------- */
+.hero {
+  position: relative;
+  min-height: clamp(480px, 82vh, 760px);
+  display: flex;
+  align-items: flex-end;
+  overflow: hidden;
+  isolation: isolate;
+}
+.hero-bg { position: absolute; inset: 0; z-index: -1; }
+.hero-bg img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  object-position: center 22%;
+  animation: kenburns 36s ease-in-out infinite alternate;
+}
+@keyframes kenburns {
+  from { transform: scale(1); }
+  to { transform: scale(1.09); }
+}
+.hero::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  z-index: 0;
+  background:
+    linear-gradient(to top, var(--bg) 6%, rgba(14, 12, 9, 0.4) 36%, transparent 66%),
+    linear-gradient(100deg, rgba(10, 8, 6, 0.88) 8%, rgba(10, 8, 6, 0.35) 46%, transparent 72%);
+}
+.hero-content {
+  position: relative;
+  z-index: 1;
+  width: min(1440px, 100% - clamp(32px, 6vw, 96px));
+  margin-inline: auto;
+  padding-bottom: clamp(36px, 7vh, 72px);
+  max-width: 720px;
+}
+.hero-title {
+  font-family: var(--font-display);
+  font-weight: 900;
+  font-size: clamp(2.1rem, 5.4vw, 4rem);
+  line-height: 1.04;
+  letter-spacing: -0.015em;
+  margin: 10px 0 14px;
+  text-shadow: 0 3px 24px rgba(0, 0, 0, 0.55);
+}
+.hero-meta {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px 16px;
+  color: var(--ink-dim);
+  font-size: 14px;
+  font-weight: 600;
+}
+.hero-meta .star { color: var(--amber); display: inline-flex; align-items: center; gap: 5px; }
+.hero-overview {
+  margin: 14px 0 22px;
+  color: var(--ink-dim);
+  font-size: 15px;
+  max-width: 56ch;
+  display: -webkit-box;
+  -webkit-line-clamp: 3;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+.hero-actions { display: flex; flex-wrap: wrap; gap: 12px; }
+
+/* ---------- Baris (row) katalog ---------- */
+.rows { display: flex; flex-direction: column; gap: 42px; margin-top: -34px; position: relative; z-index: 2; }
+.rows-flat { margin-top: 0; }
+
+.row-head {
+  display: flex;
+  align-items: baseline;
+  gap: 14px;
+  margin-bottom: 14px;
+}
+.row-head h2 {
+  font-family: var(--font-display);
+  font-size: clamp(1.15rem, 2vw, 1.45rem);
+  font-weight: 600;
+  letter-spacing: -0.01em;
+  white-space: nowrap;
+}
+.row-head::after {
+  content: "";
+  flex: 1;
+  height: 1px;
+  background: var(--line);
+  transform: translateY(-4px);
+}
+
+.row-body { position: relative; }
+.row-track {
+  display: flex;
+  gap: 14px;
+  overflow-x: auto;
+  scroll-snap-type: x mandatory;
+  scrollbar-width: none;
+  padding: 4px 2px 10px;
+  -webkit-mask-image: linear-gradient(90deg, transparent, #000 28px, #000 calc(100% - 28px), transparent);
+  mask-image: linear-gradient(90deg, transparent, #000 28px, #000 calc(100% - 28px), transparent);
+}
+.row-track::-webkit-scrollbar { display: none; }
+.row-track > * { scroll-snap-align: start; }
+
+.row-arrow {
+  position: absolute;
+  top: 0;
+  bottom: 10px;
+  width: 44px;
+  z-index: 3;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--ink);
+  background: linear-gradient(90deg, rgba(14, 12, 9, 0.85), transparent);
+  opacity: 0;
+  transition: opacity 0.2s ease;
+}
+.row-arrow.right { right: 0; background: linear-gradient(270deg, rgba(14, 12, 9, 0.85), transparent); }
+.row-arrow.left { left: 0; }
+.row-body:hover .row-arrow, .row-arrow:focus-visible { opacity: 1; }
+@media (hover: none) { .row-arrow { display: none; } }
+
+/* ---------- Kartu poster ---------- */
+.card {
+  flex: none;
+  width: clamp(118px, 13.5vw, 166px);
+  display: block;
+  border-radius: var(--radius);
+  transition: transform 0.2s ease;
+}
+.card-poster {
+  position: relative;
+  aspect-ratio: 2 / 3;
+  border-radius: var(--radius);
+  overflow: hidden;
+  background: var(--panel);
+  border: 1px solid var(--line);
+  transition: border-color 0.2s ease, box-shadow 0.2s ease;
+}
+.card-poster img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  transition: transform 0.35s ease;
+}
+.card:hover { transform: translateY(-4px); }
+.card:hover .card-poster {
+  border-color: rgba(233, 180, 88, 0.55);
+  box-shadow: 0 10px 26px rgba(0, 0, 0, 0.45);
+}
+.card:hover .card-poster img { transform: scale(1.05); }
+
+.card-empty {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  text-align: center;
+  padding: 14px;
+  color: var(--muted);
+  font-family: var(--font-display);
+  font-style: italic;
+  font-size: 13px;
+  background:
+    repeating-linear-gradient(-45deg, rgba(243, 236, 221, 0.025) 0 8px, transparent 8px 16px),
+    var(--panel);
+}
+
+.card-veil {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  align-items: flex-start;
+  justify-content: flex-end;
+  padding: 8px;
+  background: linear-gradient(to bottom, rgba(9, 8, 6, 0.5), transparent 42%);
+  opacity: 0;
+  transition: opacity 0.2s ease;
+}
+.card:hover .card-veil, .card:focus-within .card-veil { opacity: 1; }
+
+.chip-btn {
+  width: 30px;
+  height: 30px;
+  border-radius: 999px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  background: rgba(14, 12, 9, 0.78);
+  border: 1px solid var(--line-strong);
+  color: var(--ink);
+  transition: all 0.15s ease;
+}
+.chip-btn:hover { border-color: var(--amber); color: var(--amber-hi); }
+.chip-btn.on { background: var(--amber); border-color: var(--amber); color: var(--amber-ink); }
+
+.card-rate {
+  position: absolute;
+  left: 8px;
+  bottom: 8px;
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  font-size: 11.5px;
+  font-weight: 800;
+  padding: 3px 8px;
+  border-radius: 999px;
+  background: rgba(9, 8, 6, 0.78);
+  border: 1px solid var(--line);
+  color: var(--amber);
+}
+.card-rate svg { width: 11px; height: 11px; }
+
+.card-caption { padding: 9px 2px 0; display: grid; gap: 2px; }
+.card-title {
+  font-size: 13px;
+  font-weight: 700;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.card-meta { font-size: 11.5px; color: var(--muted); font-weight: 600; }
+
+/* ---------- Top 10: angka besar bergaris ---------- */
+.rank { display: flex; align-items: flex-end; flex: none; }
+.rank-num {
+  font-family: var(--font-display);
+  font-weight: 900;
+  font-size: clamp(84px, 11vw, 148px);
+  line-height: 0.78;
+  color: transparent;
+  -webkit-text-stroke: 2px rgba(243, 236, 221, 0.34);
+  margin-right: -16px;
+  margin-bottom: 26px;
+  user-select: none;
+}
+.rank .card { width: clamp(104px, 11vw, 142px); position: relative; z-index: 1; }

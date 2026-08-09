@@ -1,0 +1,147 @@
+/* ============================================================
+   Halaman: tonton (player), watchlist, setup API key, 404
+   ============================================================ */
+
+/* ---------- Tonton / Player ---------- */
+.watch-page { padding-top: var(--nav-h); }
+.player-shell { background: #000; }
+.player-box { width: min(1200px, 100%); margin-inline: auto; aspect-ratio: 16 / 9; }
+.watch-meta {
+  width: min(1200px, 100% - 32px);
+  margin: 20px auto 0;
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  flex-wrap: wrap;
+}
+.watch-meta .back {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  color: var(--muted);
+  font-weight: 700;
+  font-size: 13.5px;
+  padding: 6px 0;
+}
+.watch-meta .back:hover { color: var(--amber-hi); }
+.watch-meta h1 {
+  font-family: var(--font-display);
+  font-size: 1.25rem;
+  font-weight: 600;
+}
+
+.no-stream {
+  max-width: 620px;
+  margin: 40px auto;
+  padding: 0 20px;
+  display: grid;
+  gap: 14px;
+  justify-items: start;
+}
+.no-stream .frame {
+  width: 74px;
+  height: 54px;
+  border: 2px solid var(--line-strong);
+  border-radius: 8px;
+  position: relative;
+  background:
+    repeating-linear-gradient(90deg, transparent 0 8px, rgba(243,236,221,0.08) 8px 10px);
+}
+.no-stream .frame::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  margin: auto;
+  width: 0; height: 0;
+  border-left: 16px solid var(--amber);
+  border-top: 10px solid transparent;
+  border-bottom: 10px solid transparent;
+}
+.no-stream h1 { font-family: var(--font-display); font-size: 1.7rem; }
+.no-stream p { color: var(--muted); font-size: 14.5px; }
+.no-stream .row-gap { display: flex; flex-wrap: wrap; gap: 12px; margin-top: 6px; }
+
+/* ---------- Watchlist ---------- */
+.wl-actions { display: flex; align-items: center; gap: 16px; margin-bottom: 26px; flex-wrap: wrap; }
+.wl-count { color: var(--muted); font-size: 13.5px; font-weight: 600; }
+
+/* ---------- Setup (tanpa API key) ---------- */
+.setup {
+  min-height: 100vh;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 40px 20px;
+}
+.setup-card {
+  width: min(560px, 100%);
+  border: 1px solid var(--line-strong);
+  border-radius: var(--radius-lg);
+  background: linear-gradient(180deg, var(--panel), rgba(23, 19, 16, 0.6));
+  padding: 40px 38px;
+  box-shadow: var(--shadow-lift);
+}
+.setup-card .kicker { margin-bottom: 10px; }
+.setup-card h1 {
+  font-family: var(--font-display);
+  font-size: clamp(1.7rem, 4vw, 2.2rem);
+  margin-bottom: 14px;
+}
+.setup-card > p { color: var(--muted); margin-bottom: 22px; font-size: 14.5px; }
+.setup-steps { display: grid; gap: 12px; margin-bottom: 22px; counter-reset: step; }
+.setup-steps li {
+  list-style: none;
+  counter-increment: step;
+  display: flex;
+  gap: 12px;
+  color: var(--ink-dim);
+  font-size: 14px;
+}
+.setup-steps li::before {
+  content: counter(step, decimal-leading-zero);
+  font-family: var(--font-display);
+  color: var(--amber);
+  font-weight: 700;
+  flex: none;
+}
+.setup-steps a { color: var(--amber-hi); text-decoration: underline; text-underline-offset: 3px; }
+.codebox {
+  background: var(--bg-deep);
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  padding: 14px 16px;
+  font-family: ui-monospace, "Cascadia Code", Consolas, monospace;
+  font-size: 13px;
+  color: var(--amber-hi);
+  margin-bottom: 24px;
+  overflow-x: auto;
+}
+.setup-actions { display: flex; gap: 12px; flex-wrap: wrap; }
+
+/* ---------- 404 ---------- */
+.notfound {
+  min-height: 70vh;
+  display: grid;
+  place-items: center;
+  text-align: center;
+  padding: 40px 20px;
+}
+.notfound .big {
+  font-family: var(--font-display);
+  font-weight: 900;
+  font-size: clamp(4rem, 12vw, 7rem);
+  line-height: 1;
+  color: transparent;
+  -webkit-text-stroke: 2px rgba(243, 236, 221, 0.3);
+}
+.notfound h1 { font-family: var(--font-display); font-size: 1.5rem; margin: 14px 0 8px; }
+.notfound p { color: var(--muted); margin-bottom: 20px; }
+
+/* ---------- Error state global ---------- */
+.err-wrap { padding-top: calc(var(--nav-h) + 60px); }
+
+@media (prefers-reduced-motion: reduce) {
+  .hero-bg img { animation: none; }
+  .skel { animation: none; }
+  html { scroll-behavior: auto; }
+}

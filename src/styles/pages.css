@@ -1,0 +1,113 @@
+/* ============================================================
+   Halaman: beranda, jelajah (browse), pencarian
+   ============================================================ */
+
+/* ---------- Jelajah / Browse ---------- */
+.browse-bar {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 12px;
+  margin-bottom: 30px;
+}
+.tabs {
+  display: inline-flex;
+  background: var(--panel);
+  border: 1px solid var(--line);
+  border-radius: 999px;
+  padding: 4px;
+  gap: 2px;
+}
+.tabs button {
+  padding: 7px 18px;
+  border-radius: 999px;
+  font-size: 13px;
+  font-weight: 700;
+  color: var(--muted);
+  transition: all 0.15s ease;
+}
+.tabs button:hover { color: var(--ink); }
+.tabs button.on { background: var(--amber); color: var(--amber-ink); }
+
+.browse-bar .spacer { flex: 1; }
+.browse-bar label {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 12.5px;
+  font-weight: 700;
+  color: var(--faint);
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+}
+
+.genre-chips { display: flex; flex-wrap: wrap; gap: 8px; margin-bottom: 30px; }
+.genre-chip {
+  padding: 6px 14px;
+  border-radius: 999px;
+  border: 1px solid var(--line);
+  font-size: 12.5px;
+  font-weight: 700;
+  color: var(--ink-dim);
+  transition: all 0.15s ease;
+}
+.genre-chip:hover { border-color: var(--line-strong); color: var(--ink); }
+.genre-chip.on { border-color: var(--amber); background: rgba(233, 180, 88, 0.12); color: var(--amber-hi); }
+
+.load-more { display: flex; justify-content: center; margin-top: 40px; }
+
+.count-note { color: var(--faint); font-size: 12.5px; margin-bottom: 18px; font-weight: 600; }
+
+/* ---------- Pencarian ---------- */
+.search-hero { margin-bottom: 30px; }
+.search-input {
+  width: 100%;
+  max-width: 640px;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  background: var(--panel);
+  border: 1px solid var(--line-strong);
+  border-radius: var(--radius-lg);
+  padding: 14px 18px;
+  transition: border-color 0.15s ease;
+}
+.search-input:focus-within { border-color: var(--amber); }
+.search-input svg { color: var(--muted); flex: none; }
+.search-input input {
+  flex: 1;
+  background: none;
+  border: 0;
+  outline: none;
+  color: var(--ink);
+  font-size: 16px;
+}
+.search-input input::placeholder { color: var(--faint); }
+.search-input .clear { color: var(--faint); display: inline-flex; padding: 4px; }
+.search-input .clear:hover { color: var(--ink); }
+
+.recent { margin-top: 18px; display: flex; flex-wrap: wrap; align-items: center; gap: 8px; }
+.recent .lbl { font-size: 12px; color: var(--faint); font-weight: 700; letter-spacing: 0.08em; text-transform: uppercase; margin-right: 4px; }
+.recent button {
+  padding: 6px 14px;
+  border-radius: 999px;
+  border: 1px dashed var(--line-strong);
+  color: var(--ink-dim);
+  font-size: 13px;
+  font-weight: 600;
+}
+.recent button:hover { border-color: var(--amber); color: var(--amber-hi); border-style: solid; }
+
+.search-section { margin-top: 36px; }
+.search-section h2 {
+  font-family: var(--font-display);
+  font-size: 1.2rem;
+  margin-bottom: 16px;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+.search-section h2::after { content: ""; flex: 1; height: 1px; background: var(--line); }
+
+/* ---------- Beranda ---------- */
+.home-gap { height: 26px; }
