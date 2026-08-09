@@ -4,7 +4,7 @@
 
 Seluloid — katalog & streaming film/series bergaya Netflix berbasis TMDB API.
 Frontend-only (React 18 + Vite 6), UI berbahasa Indonesia.
-Dokumen PRD lengkap: `prd-tmdb-netflix-clone.md`.
+Dokumen PRD lengkap: `docs/prd-tmdb-netflix-clone.md`.
 
 ## Tech Stack
 

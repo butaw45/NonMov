@@ -1,7 +1,7 @@
 # Seluloid
 
 Katalog & streaming film/series berbasis **TMDB** dengan nuansa bioskop klasik — frontend
-publik dari PRD `prd-tmdb-netflix-clone.md`.
+publik dari PRD `docs/prd-tmdb-netflix-clone.md`.
 
 > Brand, palet, dan tipografi dipilih sendiri (Fraunces + Manrope, hitam hangat + amber
 > lampu proyektor) supaya situs punya identitas — bukan template streaming generik.
