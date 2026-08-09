@@ -31,6 +31,11 @@
 
 * { margin: 0; padding: 0; box-sizing: border-box; }
 
+/* Atribut hidden harus selalu menang atas rule display komponen
+   (mis. .card-empty yang display:flex) — tanpa ini, fallback poster
+   menutupi gambar yang sebenarnya berhasil dimuat. */
+[hidden] { display: none !important; }
+
 html { scroll-behavior: smooth; }
 
 body {
