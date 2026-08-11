@@ -4,6 +4,7 @@ import { useWatchlist } from '../lib/watchlist'
 import { useTitle } from '../lib/hooks'
 import Hero from '../components/Hero'
 import Row from '../components/Row'
+import ContinueRow from '../components/ContinueRow'
 import { HeroSkeleton, RowSkeleton } from '../components/Skeletons'
 import { IconAlert } from '../components/Icons'
 
@@ -107,6 +108,7 @@ export default function Home() {
     <>
       {featured && <Hero item={featured} />}
       <div className="container rows">
+        <ContinueRow />
         <Row kicker="Lintas tipe" title="Trending Minggu Ini" items={clean(rows.trendW)} />
         <Row kicker="Pilihan penonton" title="Top 10 Hari Ini" items={clean(rows.top10)} numbered />
         {picks && picks.items.length > 0 && (

@@ -272,21 +272,30 @@ export default function Detail() {
                   <p className="muted">Daftar episode untuk season ini belum tersedia.</p>
                 )}
                 {eps.map((ep) => (
-                  <article className="ep" key={ep.id}>
-                    <div className="still">
-                      {ep.still_path && (
-                        <img loading="lazy" src={img(ep.still_path, 'w300')} alt="" />
-                      )}
-                      <span className="epnum">EP {String(ep.episode_number).padStart(2, '0')}</span>
-                    </div>
-                    <div>
-                      <div className="ep-name">
-                        {ep.name || `Episode ${ep.episode_number}`}
-                        {ep.runtime > 0 && <span className="dur">{runtimeLabel(ep.runtime)}</span>}
+                  <Link
+                    className="ep-link"
+                    key={ep.id}
+                    to={`/tonton/tv/${id}?season=${season}&episode=${ep.episode_number}`}
+                  >
+                    <article className="ep">
+                      <div className="still">
+                        {ep.still_path && (
+                          <img loading="lazy" src={img(ep.still_path, 'w300')} alt="" />
+                        )}
+                        <span className="epnum">EP {String(ep.episode_number).padStart(2, '0')}</span>
                       </div>
-                      {ep.overview && <p className="ep-over">{ep.overview}</p>}
-                    </div>
-                  </article>
+                      <div>
+                        <div className="ep-name">
+                          {ep.name || `Episode ${ep.episode_number}`}
+                          {ep.runtime > 0 && <span className="dur">{runtimeLabel(ep.runtime)}</span>}
+                        </div>
+                        {ep.overview && <p className="ep-over">{ep.overview}</p>}
+                        <span className="btn btn-primary btn-sm ep-watch">
+                          <IconPlay size={13} /> Tonton EP {ep.episode_number}
+                        </span>
+                      </div>
+                    </article>
+                  </Link>
                 ))}
               </div>
             )}

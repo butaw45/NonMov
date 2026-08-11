@@ -245,3 +245,74 @@
   user-select: none;
 }
 .rank .card { width: clamp(104px, 11vw, 142px); position: relative; z-index: 1; }
+
+/* ---------- Lanjutkan Menonton ---------- */
+.continue-track {
+  display: flex;
+  gap: 14px;
+  overflow-x: auto;
+  scrollbar-width: none;
+  padding: 4px 2px 10px;
+  -webkit-mask-image: linear-gradient(90deg, transparent, #000 28px, #000 calc(100% - 28px), transparent);
+  mask-image: linear-gradient(90deg, transparent, #000 28px, #000 calc(100% - 28px), transparent);
+}
+.continue-track::-webkit-scrollbar { display: none; }
+
+.continue-card {
+  position: relative;
+  flex: none;
+  width: clamp(150px, 18vw, 200px);
+  border-radius: var(--radius);
+  overflow: hidden;
+  background: var(--panel);
+  border: 1px solid var(--line);
+}
+.continue-link { display: block; position: relative; }
+.continue-link img {
+  width: 100%;
+  aspect-ratio: 2 / 3;
+  object-fit: cover;
+  display: block;
+}
+.continue-meta {
+  position: absolute;
+  inset-inline: 0;
+  bottom: 0;
+  padding: 26px 10px 12px;
+  background: linear-gradient(transparent, rgba(9, 8, 6, 0.92));
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+.continue-title {
+  font-weight: 700;
+  font-size: 0.9rem;
+  color: var(--ink);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.continue-ep { font-size: 0.75rem; font-weight: 700; color: var(--amber); }
+.continue-progress {
+  position: absolute;
+  inset-inline: 0;
+  bottom: 0;
+  height: 4px;
+  background: rgba(243, 236, 221, 0.22);
+}
+.continue-progress span { display: block; height: 100%; background: var(--amber); }
+.continue-remove {
+  position: absolute;
+  top: 8px;
+  right: 8px;
+  width: 26px;
+  height: 26px;
+  border-radius: 50%;
+  background: rgba(9, 8, 6, 0.62);
+  color: var(--ink);
+  display: grid;
+  place-items: center;
+  cursor: pointer;
+  transition: background 0.15s ease;
+}
+.continue-remove:hover { background: rgba(9, 8, 6, 0.9); }
