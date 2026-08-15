@@ -94,5 +94,26 @@ Dokumen PRD lengkap: `docs/prd-tmdb-netflix-clone.md`.
   codebase secara holistik (graph interaktif, community detection, god nodes).
   Gunakan `codebase-memory` untuk query kode spesifik (fungsi, caller, definisi).
   Keduanya melengkapi: graphify untuk "peta", codebase-memory untuk "detail".
+- **Kapan graphify digunakan:**
+  - Eksplorasi awal codebase (onboarding, audit arsitektur)
+  - Review PR/branch yang berdampak luas (multiple file, multi-module)
+  - Mencari cross-cutting concerns atau dead code yang tidak terlihat dari satu file
+  - Presentasi visual arsitektur ke stakeholder
+  - Pertanyaan "apa hubungan antar modul?" yang butuh community detection
+- **Kapan graphify TIDAK digunakan:**
+  - Bug fix sederhana (satu file, satu fungsi)
+  - Menambahkan fitur kecil yang sudah punya lokasi jelas
+  - Query spesifik ("siapa yang memanggil X?") — pakai codebase-memory saja
+  - Setiap commit/perubahan kecil — terlalu berat untuk incremental changes
+- **Kapan graphify di-rebuild:**
+  - Setelah merge PR besar yang mengubah struktur codebase secara signifikan
+  - Setiap kali selesai milestone fitur yang mengubah >20% file
+  - Sebelum eksplorasi arsitektur untuk memastikan graph fresh
+  - Setelah pergantian branch besar (misal: merge dev ke main)
+- **Kapan graphify TIDAK di-rebuild:**
+  - Setiap perubahan file kecil — codebase-memory cukup
+  - Saat debugging satu bug — gunakan graph yang ada atau codebase-memory
+  - Saat implementasi fitur berantai (tunggu sampai milestone selesai)
+  - Jika graphify-out/graph.json ada dan masih relevan — fast path query saja
 - Remote repo: https://github.com/butaw45/NonMov.git (branch utama: `main`)
 - Identitas git diset **lokal** di repo ini: Muhammad Haris <hariis12k@gmail.com>
