@@ -2,7 +2,7 @@ import { useEffect, useRef, useState } from 'react'
 import { Link, useParams, useSearchParams } from 'react-router-dom'
 import Artplayer from 'artplayer'
 import Hls from 'hls.js'
-import { tmdb, img, pickProviders, catalogLookup } from '../lib/tmdb'
+import { tmdb, img, pickProviders, catalogLookup, fetchConfig } from '../lib/tmdb'
 import { useTitle } from '../lib/hooks'
 import { runtimeLabel } from '../lib/utils'
 import { restorePosition, upsertProgress, removeHistory } from '../lib/history'
@@ -18,6 +18,8 @@ export default function Watch() {
   const srcQuery = sp.get('src')
   // URL stream final: prioritas ?src= (manual), lalu catalog backend (otomatis)
   const [catalogEntry, setCatalogEntry] = useState(null)
+  const [config, setConfig] = useState(null)
+  const [resolving, setResolving] = useState(true)
   const src = srcQuery || catalogEntry?.video_url
   // Konteks episode untuk TV dari query (?season=&episode=) — dipakai resume & label
   const season = kind === 'tv' ? Number(sp.get('season')) || 1 : null
@@ -48,16 +50,23 @@ export default function Watch() {
       : 'Nonton'
   )
 
-  // Cari video_url di catalog backend jika tidak ada ?src= manual
+  // Muat catalog + konfigurasi global secara paralel jika tidak ada ?src= manual
   useEffect(() => {
-    if (srcQuery || !id) return
+    if (srcQuery) {
+      setResolving(false)
+      return
+    }
+    if (!id) return
     let on = true
-    catalogLookup(id, kind)
-      .then((entry) => {
-        if (!on) return
-        setCatalogEntry(entry)
-      })
-      .catch(() => {})
+    Promise.all([
+      catalogLookup(id, kind).catch(() => null),
+      fetchConfig().catch(() => null),
+    ]).then(([entry, cfg]) => {
+      if (!on) return
+      setCatalogEntry(entry)
+      setConfig(cfg)
+      setResolving(false)
+    })
     return () => { on = false }
   }, [srcQuery, id, kind])
 
@@ -189,9 +198,14 @@ export default function Watch() {
     return `/tonton/tv/${id}?${q}`
   }
 
-  // Dual player: viduki vs self-hosted
-  const isViduki = catalogEntry?.video_provider === 'viduki'
-  const hasStream = src || (isViduki && catalogEntry?.tmdb_id)
+  // Dual player: viduki vs self-hosted (dengan fallback ke konfigurasi global)
+  const entry = catalogEntry
+  const isViduki = entry?.video_provider === 'viduki' || (!entry && config?.viduki_enabled)
+  const vidukiTmdbId = entry?.tmdb_id ?? (isViduki ? Number(id) : undefined)
+  const vidukiType = entry?.viduki_type || kind
+  const vidukiApi = entry?.viduki_api || config?.viduki_default_api || 2
+  const vidukiColor = entry?.viduki_color || config?.viduki_color || '#ef4444'
+  const hasStream = src || isViduki
 
   return (
     <div className="watch-page">
@@ -200,12 +214,12 @@ export default function Watch() {
           {isViduki ? (
             <div className="player-shell">
               <IframePlayer
-                api={catalogEntry?.viduki_api || 2}
-                tmdbId={catalogEntry?.tmdb_id}
-                type={catalogEntry?.viduki_type || kind}
+                api={vidukiApi}
+                tmdbId={vidukiTmdbId}
+                type={vidukiType}
                 season={season}
                 episode={episode}
-                color={catalogEntry?.viduki_color || '#ef4444'}
+                color={vidukiColor}
               />
             </div>
           ) : (
@@ -221,6 +235,10 @@ export default function Watch() {
             {title && <h1>{title}</h1>}
           </div>
         </>
+      ) : resolving ? (
+        <div className="no-stream">
+          <p className="hint">Memuat pemutar...</p>
+        </div>
       ) : (
         <div className="no-stream">
           <span className="frame" aria-hidden="true" />

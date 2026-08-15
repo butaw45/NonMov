@@ -21,6 +21,7 @@ const AdminLogin = lazy(() => import('./pages/AdminLogin'))
 const AdminLayout = lazy(() => import('./components/AdminLayout'))
 const Admin = lazy(() => import('./pages/Admin'))
 const AdminEntry = lazy(() => import('./pages/AdminEntry'))
+const AdminSettings = lazy(() => import('./pages/AdminSettings'))
 
 function ScrollToTop() {
   const { pathname } = useLocation()
@@ -64,6 +65,7 @@ function AppShell() {
                 <Route index element={<Admin />} />
                 <Route path="entry" element={<AdminEntry />} />
                 <Route path="entry/:id" element={<AdminEntry />} />
+                <Route path="settings" element={<AdminSettings />} />
               </Route>
               <Route path="*" element={<NotFound />} />
             </Routes>

@@ -47,6 +47,7 @@ export default function AdminLayout() {
       <header className="admin-header">
         <Link to="/admin" className="admin-brand">Seluloid Admin</Link>
         <nav>
+          <Link to="/admin/settings" className="btn btn-ghost btn-sm">Pengaturan</Link>
           <Link to="/" className="btn btn-ghost btn-sm">Lihat Situs</Link>
           <button className="btn btn-ghost btn-sm" onClick={onLogout}>Keluar</button>
         </nav>

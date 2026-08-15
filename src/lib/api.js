@@ -42,6 +42,8 @@ export const adminApi = {
     request('/admin/api/login', { method: 'POST', body: JSON.stringify({ username, password }) }),
   logout: () => request('/admin/api/logout', { method: 'POST' }),
   me: () => request('/admin/api/me'),
+  getConfig: () => request('/admin/api/config'),
+  updateConfig: (data) => request('/admin/api/config', { method: 'PUT', body: JSON.stringify(data) }),
   listEntries: (status) =>
     request(`/admin/api/entries${status ? `?status=${encodeURIComponent(status)}` : ''}`),
   getEntry: (id) => request(`/admin/api/entries/${encodeURIComponent(id)}`),

@@ -19,6 +19,7 @@ import {
   searchTMDB,
   fetchTMDBTitle,
 } from './admin.js'
+import { getConfig, updateConfig } from './config.js'
 
 const router = Router()
 
@@ -125,7 +126,22 @@ router.put('/entries/:id', protectRoute, (req, res) => {
 router.delete('/entries/:id', protectRoute, (req, res) => {
   const ok = deleteEntry(req.params.id)
   if (!ok) return res.status(404).json({ status_message: 'Entry tidak ditemukan' })
-  res.json({ ok: true })
+})
+
+// ---- Config global --------------------------------------------------
+
+// GET /admin/api/config
+router.get('/config', protectRoute, (req, res) => {
+  res.json(getConfig())
+})
+
+// PUT /admin/api/config
+router.put('/config', protectRoute, (req, res) => {
+  try {
+    res.json(updateConfig(req.body || {}))
+  } catch (err) {
+    res.status(400).json({ status_message: err.message })
+  }
 })
 
 // ---- TMDB match ------------------------------------------------------

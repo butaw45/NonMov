@@ -15,6 +15,7 @@ import { readFileSync, existsSync } from 'node:fs'
 import { fileURLToPath } from 'node:url'
 import path from 'node:path'
 import adminRoutes from './adminRoutes.js'
+import { getConfig } from './config.js'
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url))
 const API_KEY = (process.env.TMDB_API_KEY || '').trim()
@@ -87,6 +88,11 @@ app.get('/api/catalog/:id', (req, res) => {
   const item = loadCatalog().find((c) => String(c.id) === req.params.id)
   if (!item) return res.status(404).json({ status_message: 'Not found' })
   res.json(item)
+})
+
+// GET /api/config — konfigurasi global (publik, tanpa auth)
+app.get('/api/config', (req, res) => {
+  res.json(getConfig())
 })
 
 // ---- Admin API ----------------------------------------------------
