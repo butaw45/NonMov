@@ -98,26 +98,79 @@ function entryExists(tmdb_id, type) {
   return entries.some((e) => e.tmdb_id === Number(tmdb_id) && e.type === type)
 }
 
-export function createEntry({ type, tmdb_id, title, status, video_url, video_type, episodes }) {
+// ---- Validasi schema entry ----------------------------------------
+const VIDUKI_APIS = [1, 2, 3, 4]
+const VIDUKI_COLORS = ['#ef4444']
+
+function validateVidukiFields(data, { strict = false } = {}) {
+  const provider = data.video_provider || 'self'
+
+  if (provider === 'viduki') {
+    // viduki butuh tmdb_id + viduki_type + viduki_api
+    if (strict && !data.tmdb_id) throw new Error('tmdb_id wajib untuk viduki')
+    if (data.viduki_type && !['tv', 'movie'].includes(data.viduki_type)) {
+      throw new Error('viduki_type harus tv atau movie')
+    }
+    if (data.viduki_api && !VIDUKI_APIS.includes(Number(data.viduki_api))) {
+      throw new Error(`viduki_api harus ${VIDUKI_APIS.join('|')}`)
+    }
+    if (data.viduki_color && !/^#[0-9a-fA-F]{6}$/.test(data.viduki_color)) {
+      throw new Error('viduki_color harus format hex #RRGGBB')
+    }
+    // clear self-hosted fields
+    return {
+      ...data,
+      video_provider: 'viduki',
+      video_url: null,
+      video_type: null,
+      viduki_api: Number(data.viduki_api) || 2,
+      viduki_type: data.viduki_type || data.type || 'movie',
+      viduki_color: data.viduki_color || '#ef4444',
+    }
+  }
+
+  // self-hosted
+  if (strict && !data.video_url) throw new Error('video_url wajib untuk self-hosted')
+  if (data.video_url && !/^https?:\/\//.test(data.video_url)) {
+    throw new Error('video_url harus diawali http:// atau https://')
+  }
+  return {
+    ...data,
+    video_provider: 'self',
+    video_url: data.video_url || null,
+    video_type: data.video_url ? (data.video_type || 'hls') : null,
+    viduki_api: null,
+    viduki_type: null,
+    viduki_color: null,
+  }
+}
+
+export function createEntry({ type, tmdb_id, title, status, video_url, video_type, episodes, video_provider, viduki_api, viduki_type, viduki_color }) {
   if (!['movie', 'tv'].includes(type)) throw new Error('type harus movie atau tv')
   const tid = Number(tmdb_id)
   if (!Number.isInteger(tid) || tid <= 0) throw new Error('tmdb_id harus integer positif')
   if (entryExists(tid, type)) throw new Error(`Entry untuk TMDB ID ${tid} (${type}) sudah ada`)
 
   const st = status === 'published' ? 'published' : 'draft'
-  if (video_url && !/^https?:\/\//.test(video_url)) {
-    throw new Error('video_url harus diawali http:// atau https://')
-  }
 
   const now = new Date().toISOString()
+  const validated = validateVidukiFields(
+    { type, tmdb_id, video_url, video_type, video_provider, viduki_api, viduki_type, viduki_color },
+    { strict: true }
+  )
+
   const entry = {
     id: `${tid}-${type}-${Date.now().toString(36)}-${crypto.randomBytes(3).toString('hex')}`,
     type,
     tmdb_id: tid,
     title: title || '',
     status: st,
-    video_url: video_url || null,
-    video_type: video_url ? (video_type || 'hls') : null,
+    video_provider: validated.video_provider,
+    video_url: validated.video_url,
+    video_type: validated.video_type,
+    viduki_api: validated.viduki_api,
+    viduki_type: validated.viduki_type,
+    viduki_color: validated.viduki_color,
     episodes: Array.isArray(episodes) ? episodes : undefined,
     created_at: now,
     updated_at: now,
@@ -134,22 +187,36 @@ export function updateEntry(id, patch) {
   if (idx === -1) return null
 
   const cur = store.entries[idx]
-  const next = { ...cur }
+  const merged = { ...cur }
 
-  if (patch.status !== undefined) {
-    next.status = patch.status === 'published' ? 'published' : 'draft'
-  }
-  if (patch.video_url !== undefined) {
-    if (patch.video_url && !/^https?:\/\//.test(patch.video_url)) {
-      throw new Error('video_url harus diawali http:// atau https://')
-    }
-    next.video_url = patch.video_url || null
-  }
-  if (patch.video_type !== undefined) {
-    next.video_type = patch.video_type || null
-  }
-  if (patch.episodes !== undefined) {
-    next.episodes = Array.isArray(patch.episodes) ? patch.episodes : undefined
+  // Merge patch fields ke current (untuk validasi)
+  if (patch.status !== undefined) merged.status = patch.status === 'published' ? 'published' : 'draft'
+  if (patch.video_url !== undefined) merged.video_url = patch.video_url || null
+  if (patch.video_type !== undefined) merged.video_type = patch.video_type || null
+  if (patch.video_provider !== undefined) merged.video_provider = patch.video_provider
+  if (patch.viduki_api !== undefined) merged.viduki_api = patch.viduki_api
+  if (patch.viduki_type !== undefined) merged.viduki_type = patch.viduki_type
+  if (patch.viduki_color !== undefined) merged.viduki_color = patch.viduki_color
+  if (patch.episodes !== undefined) merged.episodes = patch.episodes
+
+  const validated = validateVidukiFields(merged, { strict: true })
+
+  // Hanya update field yang dikirim (bukan merge semua)
+  const next = { ...cur }
+  if (patch.status !== undefined) next.status = validated.status
+  if (patch.video_url !== undefined) next.video_url = validated.video_url
+  if (patch.video_type !== undefined) next.video_type = validated.video_type
+  if (patch.video_provider !== undefined) next.video_provider = validated.video_provider
+  if (patch.viduki_api !== undefined) next.viduki_api = validated.viduki_api
+  if (patch.viduki_type !== undefined) next.viduki_type = validated.viduki_type
+  if (patch.viduki_color !== undefined) next.viduki_color = validated.viduki_color
+  if (patch.episodes !== undefined) next.episodes = validated.episodes
+
+  // Pastikan viduki fields di-clear kalau switch ke self
+  if (patch.video_provider === 'self' && cur.video_provider === 'viduki') {
+    next.viduki_api = null
+    next.viduki_type = null
+    next.viduki_color = null
   }
 
   next.updated_at = new Date().toISOString()

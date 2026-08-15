@@ -28,6 +28,20 @@ export async function catalogLookup(tmdbId, type) {
   }
 }
 
+// Ambil konfigurasi global (viduki) dari backend. Mengembalikan null jika
+// backend tidak jalan (frontend tetap berfungsi).
+export async function fetchConfig() {
+  try {
+    const res = await fetch('/api/config', {
+      headers: { Accept: 'application/json' },
+    })
+    if (!res.ok) return null
+    return await res.json()
+  } catch {
+    return null
+  }
+}
+
 export function img(path, size = 'w342') {
   if (!path) return null
   return `${IMG}/${size}${path}`
