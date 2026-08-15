@@ -14,6 +14,7 @@ import express from 'express'
 import { readFileSync, existsSync } from 'node:fs'
 import { fileURLToPath } from 'node:url'
 import path from 'node:path'
+import adminRoutes from './adminRoutes.js'
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url))
 const API_KEY = (process.env.TMDB_API_KEY || '').trim()
@@ -53,11 +54,13 @@ app.all('/3/*', async (req, res) => {
 
 // ---- Catalog JSON ----------------------------------------------
 // Dibaca ulang tiap request: volume edit kecil, tidak perlu cache/watch.
+// Backward compat: file lama = array langsung; format baru = { entries: [...], sessions: [...] }
 function loadCatalog() {
   if (!existsSync(CATALOG_PATH)) return []
   try {
     const data = JSON.parse(readFileSync(CATALOG_PATH, 'utf8'))
-    return Array.isArray(data) ? data : []
+    if (Array.isArray(data)) return data
+    return Array.isArray(data.entries) ? data.entries : []
   } catch (e) {
     console.error('[seluloid] catalog.json tidak valid:', e?.message || e)
     return []
@@ -86,6 +89,9 @@ app.get('/api/catalog/:id', (req, res) => {
   res.json(item)
 })
 
+// ---- Admin API ----------------------------------------------------
+app.use('/admin/api', adminRoutes)
+
 // ---- Static build (produksi) ------------------------------------
 const DIST = path.join(__dirname, '..', 'dist')
 if (existsSync(DIST)) {
@@ -100,5 +106,6 @@ app.listen(PORT, () => {
   console.log(`[seluloid] backend di http://localhost:${PORT}`)
   console.log('[seluloid] TMDB proxy   : /3/*')
   console.log('[seluloid] Catalog API  : /api/catalog')
+  console.log('[seluloid] Admin API    : /admin/api/* (butuh ADMIN_PASS di .env)')
   if (existsSync(DIST)) console.log('[seluloid] Static site  : dist/ (produksi)')
 })

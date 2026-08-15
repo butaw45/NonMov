@@ -15,7 +15,7 @@ publik dari PRD `docs/prd-tmdb-netflix-clone.md`.
 | ✅ P0 | Halaman detail: poster, sinopsis, cast, rating, trailer, daftar season & episode |
 | ✅ P0 | Tombol "Tonton di [platform legal]" via TMDB watch-providers (region ID) |
 | ✅ P0 | Halaman player `/tonton/:type/:id` (ArtPlayer + hls.js, HLS/DASH) — auto-resolve dari `server/catalog.json` |
-| ✅ P0 | Backend minimal: proxy TMDB (sembunyikan API key) + katalog JSON konten custom |
+| ✅ P0 | Panel admin `/admin`: login, CRUD katalog, auto-match TMDB |
 | ✅ P1 | Watchlist tersimpan di localStorage browser |
 | ✅ P1 | Rekomendasi personal dari judul yang disimpan |
 | ✅ P1 | Filter lanjutan di /jelajah: tipe, genre, tahun, urutkan |
@@ -59,35 +59,24 @@ Dengan backend berjalan, halaman `/tonton/{type}/{id}` akan otomatis memutar
 
 ## Menambah konten custom
 
-Edit `server/catalog.json`, tambah objek baru:
+Gunakan panel admin di `/admin` (butuh backend berjalan + `ADMIN_USER`/`ADMIN_PASS` di `server/.env`).
+Login → "Tambah Entri Baru" → cari judul TMDB → pilih hasil → isi URL video → Simpan.
 
-```json
-{
-  "id": 3,
-  "tmdb_id": 123,
-  "type": "movie",
-  "title": "Judul Film",
-  "video_url": "https://.../stream.m3u8",
-  "added_at": "2026-08-15"
-}
-```
-
-Untuk TV, isi `episodes` dengan array `{season, episode, title, video_url}`.
-Backend membaca file ini ulang tiap request — cukup edit dan refresh halaman.
-`video_url` tetap mengarah ke HLS/DASH eksternal (Bunny, CF Stream, dsb);
-backend tidak menghosting file video.
+Backend menulis ulang `server/catalog.json` setiap perubahan — tidak perlu restart.
 
 ## Struktur
 
 ```
 src/
-  lib/        # klien TMDB (+cache), watchlist localStorage, util & hooks
-  components/ # Navbar, Hero, Row, PosterCard, Skeleton, ikon SVG custom, dll.
-  pages/      # Home, Browse, Search, Detail, Watch, Watchlist, Setup, NotFound
+  lib/        # klien TMDB (+cache), klien Admin API, watchlist localStorage, history, util & hooks
+  components/ # Navbar, Hero, Row, PosterCard, AdminLayout, Skeleton, ikon SVG custom, dll.
+  pages/      # Home, Browse, Search, Detail, Watch, Watchlist, Setup, NotFound, Admin, AdminEntry, AdminLogin
   styles/     # design system dipecah per lapisan (tokens → layout → komponen → halaman)
 server/
-  index.js    # backend Express: proxy TMDB + /api/catalog + static dist/ (produksi)
-  catalog.json # seed entri konten custom (edit manual)
+  index.js      # backend Express: proxy TMDB + /api/catalog + /admin/api/* + static dist/ (produksi)
+  admin.js      # business logic admin (auth sesi, CRUD entri, auto-match TMDB)
+  adminRoutes.js # Express router /admin/api/* (proteksi cookie admin_session)
+  catalog.json  # katalog konten custom { entries, sessions } (kelola via /admin)
 ```
 
 ## Catatan arsitektur
@@ -99,8 +88,8 @@ server/
 
 ## Peta jalan
 
-1. Panel admin: tambah/edit entri catalog lewat UI (saat ini edit `server/catalog.json` manual).
-2. Auth admin & upload video ke layanan HLS/DASH.
+1. ~~Panel admin: tambah/edit entri catalog lewat UI~~ ✅ sudah ada di `/admin`.
+2. Upload video ke layanan HLS/DASH langsung dari panel admin.
 3. P2: pilihan subtitle.
 
 ---

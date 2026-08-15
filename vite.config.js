@@ -10,6 +10,8 @@ export default defineConfig({
     proxy: {
       '/3': 'http://localhost:4001',
       '/api': 'http://localhost:4001',
+      // Hanya API admin yang di-proxy; halaman /admin tetap dilayani Vite
+      '/admin/api': 'http://localhost:4001',
     },
   },
   build: {

@@ -1,26 +1,40 @@
-[
-  {
-    "id": 1,
-    "tmdb_id": 550,
-    "type": "movie",
-    "title": "Fight Club",
-    "video_url": "https://test-streams.mux.dev/x36xhzz/x36xhzz.m3u8",
-    "added_at": "2026-08-15"
-  },
-  {
-    "id": 2,
-    "tmdb_id": 1399,
-    "type": "tv",
-    "title": "Game of Thrones",
-    "video_url": null,
-    "episodes": [
-      {
-        "season": 1,
-        "episode": 1,
-        "title": "Winter Is Coming",
-        "video_url": "https://test-streams.mux.dev/x36xhzz/x36xhzz.m3u8"
-      }
-    ],
-    "added_at": "2026-08-15"
-  }
-]
+{
+  "entries": [
+    {
+      "id": "550-movie-seed1",
+      "type": "movie",
+      "tmdb_id": 550,
+      "title": "Fight Club",
+      "status": "published",
+      "video_url": "https://test-streams.mux.dev/x36xhzz/x36xhzz.m3u8",
+      "video_type": "hls",
+      "created_at": "2026-08-15T00:00:00.000Z",
+      "updated_at": "2026-08-15T02:07:41.395Z"
+    },
+    {
+      "id": "1399-tv-seed2",
+      "type": "tv",
+      "tmdb_id": 1399,
+      "title": "Game of Thrones",
+      "status": "published",
+      "video_url": null,
+      "video_type": null,
+      "episodes": [
+        {
+          "season": 1,
+          "episode": 1,
+          "title": "Winter Is Coming",
+          "video_url": "https://test-streams.mux.dev/x36xhzz/x36xhzz.m3u8"
+        }
+      ],
+      "created_at": "2026-08-15T00:00:00.000Z",
+      "updated_at": "2026-08-15T00:00:00.000Z"
+    }
+  ],
+  "sessions": [
+    {
+      "token": "dc8f9c01d4ade0aa65d03c16438c82729898f78d4cf1a6f0",
+      "created_at": "2026-08-15T02:06:32.782Z"
+    }
+  ]
+}
