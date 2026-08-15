@@ -67,6 +67,19 @@ Dokumen PRD lengkap: `docs/prd-tmdb-netflix-clone.md`.
    lebih dari satu opsi yang masuk akal (UX, bahasa, arsitektur, dsb.), WAJIB
    tanyakan ke user dulu sebelum memutuskan. Jangan memilih sepihak.
 
+7. **Selalu cek skill sebelum tindakan** — sebelum melakukan planning, design,
+   implementation, review, atau tindakan apapun:
+   a. Cek apakah ada skill yang relevan (melalui `find-skills` atau daftar skill
+      yang tersedia).
+   b. Jika ada skill relevan, WAJIB baca dan gunakan skill tersebut sebelum
+      melanjutkan. Jangan langsung implement tanpa skill.
+   c. Skill yang relevan untuk plan/design: `brainstorming`, `domain-modeling`,
+      `codebase-design`, `writing-plans`. Untuk implementasi: `subagent-driven-development`,
+      `executing-plans`, `tdd`, `verification-before-completion`.
+   d. Jika tidak yakin skill mana yang relevan, gunakan `ask-matt` sebagai router
+      untuk menentukan skill/flow yang tepat sebelum melanjutkan.
+   e. Catat di plan/issue jika skill tertentu digunakan.
+
 ## Catatan
 
 - **Dua sistem graf — pembagian tugas:**
@@ -77,5 +90,9 @@ Dokumen PRD lengkap: `docs/prd-tmdb-netflix-clone.md`.
     snapshot per run via skill `/graphify` (terpasang global di
     `~/.agents/skills/graphify/`). Sudah di-gitignore; bukan sumber kebenaran
     struktur kode.
+- **Kapan pakai yang mana:** gunakan `graphify` untuk eksplorasi visualisasi
+  codebase secara holistik (graph interaktif, community detection, god nodes).
+  Gunakan `codebase-memory` untuk query kode spesifik (fungsi, caller, definisi).
+  Keduanya melengkapi: graphify untuk "peta", codebase-memory untuk "detail".
 - Remote repo: https://github.com/butaw45/NonMov.git (branch utama: `main`)
 - Identitas git diset **lokal** di repo ini: Muhammad Haris <hariis12k@gmail.com>
