@@ -164,10 +164,14 @@ export default function Detail() {
             </p>
 
             <div className="detail-actions">
+              <Link className="btn btn-primary" to={`/tonton/${kind}/${id}`}>
+                <IconPlay size={15} />
+                Tonton Sekarang
+              </Link>
               {trailer && (
-                <button className="btn btn-primary" onClick={() => setTrailerOpen(true)}>
+                <button className="btn btn-ghost" onClick={() => setTrailerOpen(true)}>
                   <IconPlay size={15} />
-                  Tonton Trailer
+                  Trailer
                 </button>
               )}
               <button
