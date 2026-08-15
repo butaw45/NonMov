@@ -7,3 +7,4 @@ dist
 graphify-out/
 server/.env
 server/node_modules/
+skills-lock.json
