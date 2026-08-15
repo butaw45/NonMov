@@ -22,6 +22,13 @@ export default function AdminEntry() {
   const [status, setStatus] = useState('draft')
   const [title, setTitle] = useState('')
 
+  // Provider viduki
+  const [videoProvider, setVideoProvider] = useState('self') // 'self' | 'viduki'
+  const [vidukiApi, setVidukiApi] = useState(2)
+  const [vidukiType, setVidukiType] = useState('movie')
+  const [vidukiColor, setVidukiColor] = useState('#ef4444')
+  const [showPreview, setShowPreview] = useState(false)
+
   const [error, setError] = useState('')
   const [saving, setSaving] = useState(false)
   const [loadingEntry, setLoadingEntry] = useState(isEdit)
@@ -38,6 +45,11 @@ export default function AdminEntry() {
         setVideoUrl(e.video_url || '')
         setVideoType(e.video_type || 'hls')
         setStatus(e.status || 'draft')
+        // viduki fields
+        setVideoProvider(e.video_provider || 'self')
+        setVidukiApi(e.viduki_api || 2)
+        setVidukiType(e.viduki_type || e.type || 'movie')
+        setVidukiColor(e.viduki_color || '#ef4444')
       })
       .catch((err) => {
         if (err.authExpired) {
@@ -78,12 +90,29 @@ export default function AdminEntry() {
     setError('')
     setSaving(true)
     try {
+      const payload = {
+        status,
+        video_provider: videoProvider,
+      }
+
+      if (videoProvider === 'viduki') {
+        payload.viduki_api = vidukiApi
+        payload.viduki_type = vidukiType
+        payload.viduki_color = vidukiColor
+        // self fields di-clear
+        payload.video_url = null
+        payload.video_type = null
+      } else {
+        payload.video_url = videoUrl || null
+        payload.video_type = videoUrl ? videoType : null
+        // viduki fields di-clear
+        payload.viduki_api = null
+        payload.viduki_type = null
+        payload.viduki_color = null
+      }
+
       if (isEdit) {
-        await adminApi.updateEntry(id, {
-          status,
-          video_url: videoUrl || null,
-          video_type: videoUrl ? videoType : null,
-        })
+        await adminApi.updateEntry(id, payload)
       } else {
         const tmdbId = picked ? picked.id : Number(manualId)
         const type = picked ? picked.type : manualType
@@ -96,9 +125,7 @@ export default function AdminEntry() {
           type,
           tmdb_id: tmdbId,
           title: picked ? picked.title : title || undefined,
-          status,
-          video_url: videoUrl || null,
-          video_type: videoUrl ? videoType : null,
+          ...payload,
         })
       }
       navigate('/admin')
@@ -195,26 +222,116 @@ export default function AdminEntry() {
         {isEdit && (
           <p className="hint">{manualType === 'tv' ? 'Series' : 'Film'} · TMDB #{manualId}</p>
         )}
+
+        {/* Provider Selection */}
         <label>
-          Video URL (opsional untuk series)
-          <input
+          Sumber Video
+          <select
             className="field"
-            type="url"
-            placeholder="https://.../playlist.m3u8"
-            value={videoUrl}
-            onChange={(e) => setVideoUrl(e.target.value)}
-          />
+            value={videoProvider}
+            onChange={(e) => setVideoProvider(e.target.value)}
+          >
+            <option value="self">Self-hosted (ArtPlayer)</option>
+            <option value="viduki">viduki.net (Embed)</option>
+          </select>
         </label>
-        {videoUrl && (
-          <label>
-            Tipe Video
-            <select className="field" value={videoType} onChange={(e) => setVideoType(e.target.value)}>
-              <option value="hls">HLS (.m3u8)</option>
-              <option value="dash">DASH (.mpd)</option>
-              <option value="embed">Embed (iframe)</option>
-            </select>
-          </label>
+
+        {videoProvider === 'self' && (
+          <>
+            <label>
+              Video URL (opsional untuk series)
+              <input
+                className="field"
+                type="url"
+                placeholder="https://.../playlist.m3u8"
+                value={videoUrl}
+                onChange={(e) => setVideoUrl(e.target.value)}
+              />
+            </label>
+            {videoUrl && (
+              <label>
+                Tipe Video
+                <select className="field" value={videoType} onChange={(e) => setVideoType(e.target.value)}>
+                  <option value="hls">HLS (.m3u8)</option>
+                  <option value="dash">DASH (.mpd)</option>
+                  <option value="embed">Embed (iframe)</option>
+                </select>
+              </label>
+            )}
+          </>
         )}
+
+        {videoProvider === 'viduki' && (
+          <>
+            <label>
+              API viduki
+              <select
+                className="field"
+                value={vidukiApi}
+                onChange={(e) => setVidukiApi(Number(e.target.value))}
+              >
+                <option value="1">API 1 — Multi Server</option>
+                <option value="2">API 2 — Multi Language</option>
+                <option value="3">API 3 — Multi Embeds</option>
+                <option value="4">API 4 — Premium Embeds</option>
+              </select>
+            </label>
+
+            <label>
+              Tipe viduki
+              <select
+                className="field"
+                value={vidukiType}
+                onChange={(e) => setVidukiType(e.target.value)}
+              >
+                <option value="movie">Movie</option>
+                <option value="tv">TV Series</option>
+              </select>
+            </label>
+
+            <label>
+              Warna Player (opsional)
+              <input
+                className="field"
+                type="color"
+                value={vidukiColor}
+                onChange={(e) => setVidukiColor(e.target.value)}
+              />
+            </label>
+
+            {/* Preview iframe */}
+            <div className="form-row">
+              <button
+                type="button"
+                className="btn btn-ghost btn-sm"
+                onClick={() => setShowPreview(!showPreview)}
+              >
+                {showPreview ? 'Sembunyikan' : 'Tampilkan'} Preview
+              </button>
+            </div>
+            {showPreview && manualId && (
+              <div className="preview-box">
+                <p className="hint">
+                  Preview: https://viduki.net/{vidukiApi}/{vidukiType}/{manualId}
+                  {vidukiType === 'tv' && '/1/1'}
+                  ?color={encodeURIComponent(vidukiColor)}
+                </p>
+                <iframe
+                  src={`https://viduki.net/${vidukiApi}/${vidukiType}/${manualId}${vidukiType === 'tv' ? '/1/1' : ''}?color=${encodeURIComponent(vidukiColor)}`}
+                  style={{
+                    width: '100%',
+                    aspectRatio: '16/9',
+                    border: 0,
+                    backgroundColor: '#000',
+                  }}
+                  sandbox="allow-scripts allow-same-origin allow-forms allow-popups"
+                  title="Preview viduki"
+                />
+              </div>
+            )}
+          </>
+        )}
+
         <label>
           Status
           <select className="field" value={status} onChange={(e) => setStatus(e.target.value)}>

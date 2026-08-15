@@ -7,6 +7,7 @@ import { useTitle } from '../lib/hooks'
 import { runtimeLabel } from '../lib/utils'
 import { restorePosition, upsertProgress, removeHistory } from '../lib/history'
 import { IconArrowL, IconExt } from '../components/Icons'
+import IframePlayer from '../components/IframePlayer'
 
 // Halaman player (PRD P0 #4). URL stream HLS/DASH nantinya datang dari
 // katalog internal/backend; sekarang bisa dicoba lewat parameter ?src=.
@@ -16,8 +17,8 @@ export default function Watch() {
   const [sp] = useSearchParams()
   const srcQuery = sp.get('src')
   // URL stream final: prioritas ?src= (manual), lalu catalog backend (otomatis)
-  const [catalogSrc, setCatalogSrc] = useState(null)
-  const src = srcQuery || catalogSrc
+  const [catalogEntry, setCatalogEntry] = useState(null)
+  const src = srcQuery || catalogEntry?.video_url
   // Konteks episode untuk TV dari query (?season=&episode=) — dipakai resume & label
   const season = kind === 'tv' ? Number(sp.get('season')) || 1 : null
   const episode = kind === 'tv' ? Number(sp.get('episode')) || 1 : null
@@ -54,14 +55,11 @@ export default function Watch() {
     catalogLookup(id, kind)
       .then((entry) => {
         if (!on) return
-        const videoUrl = kind === 'tv'
-          ? entry?.episodes?.find((ep) => ep.season === season && ep.episode === episode)?.video_url
-          : entry?.video_url
-        if (videoUrl) setCatalogSrc(videoUrl)
+        setCatalogEntry(entry)
       })
       .catch(() => {})
     return () => { on = false }
-  }, [srcQuery, id, kind, season, episode])
+  }, [srcQuery, id, kind])
 
   useEffect(() => {
     let on = true
@@ -191,13 +189,30 @@ export default function Watch() {
     return `/tonton/tv/${id}?${q}`
   }
 
+  // Dual player: viduki vs self-hosted
+  const isViduki = catalogEntry?.video_provider === 'viduki'
+  const hasStream = src || (isViduki && catalogEntry?.tmdb_id)
+
   return (
     <div className="watch-page">
-      {src ? (
+      {hasStream ? (
         <>
-          <div className="player-shell">
-            <div className="player-box" ref={videoRef} />
-          </div>
+          {isViduki ? (
+            <div className="player-shell">
+              <IframePlayer
+                api={catalogEntry?.viduki_api || 2}
+                tmdbId={catalogEntry?.tmdb_id}
+                type={catalogEntry?.viduki_type || kind}
+                season={season}
+                episode={episode}
+                color={catalogEntry?.viduki_color || '#ef4444'}
+              />
+            </div>
+          ) : (
+            <div className="player-shell">
+              <div className="player-box" ref={videoRef} />
+            </div>
+          )}
           <div className="watch-meta">
             <Link className="back" to={`/judul/${kind}/${id}`}>
               <IconArrowL size={16} />
