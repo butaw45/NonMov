@@ -14,7 +14,8 @@ publik dari PRD `docs/prd-tmdb-netflix-clone.md`.
 | ✅ P0 | Search multi (film & series) dengan debounce + riwayat pencarian lokal |
 | ✅ P0 | Halaman detail: poster, sinopsis, cast, rating, trailer, daftar season & episode |
 | ✅ P0 | Tombol "Tonton di [platform legal]" via TMDB watch-providers (region ID) |
-| ✅ P0 | Halaman player `/tonton/:type/:id` (ArtPlayer + hls.js, HLS/DASH) — URL stream menyusul dari backend |
+| ✅ P0 | Halaman player `/tonton/:type/:id` (ArtPlayer + hls.js, HLS/DASH) — auto-resolve dari `server/catalog.json` |
+| ✅ P0 | Backend minimal: proxy TMDB (sembunyikan API key) + katalog JSON konten custom |
 | ✅ P1 | Watchlist tersimpan di localStorage browser |
 | ✅ P1 | Rekomendasi personal dari judul yang disimpan |
 | ✅ P1 | Filter lanjutan di /jelajah: tipe, genre, tahun, urutkan |
@@ -22,6 +23,8 @@ publik dari PRD `docs/prd-tmdb-netflix-clone.md`.
 Panel admin & status draft/publish butuh backend — belum termasuk di frontend ini.
 
 ## Menjalankan
+
+### Frontend saja (tanpa backend)
 
 ```bash
 npm install
@@ -34,8 +37,45 @@ npm run dev      # http://localhost:5173
 
 Tanpa API key, situs menampilkan layar panduan pengisian (bukan halaman rusak).
 
-Tanpa backend, halaman tonton tetap bisa dicoba dengan parameter `?src=`:
-`/tonton/movie/603?src=https://test-streams.mux.dev/x36xhzz/x36xhzz.m3u8`
+### Frontend + backend (opsi B — direkomendasikan)
+
+Backend minimal di folder `server/` berfungsi sebagai proxy TMDB (API key tersembunyi
+dari browser) dan menyajikan katalog konten custom dari `server/catalog.json`.
+
+```bash
+# 1. Jalankan backend (butuh Node 20+)
+cd server
+npm install
+cp .env.example .env   # isi TMDB_API_KEY kamu
+npm run dev            # http://localhost:4001
+
+# 2. Di terminal lain, jalankan frontend (otomatis proxy /3 dan /api ke backend)
+cd ..
+npm run dev            # http://localhost:5173
+```
+
+Dengan backend berjalan, halaman `/tonton/{type}/{id}` akan otomatis memutar
+`video_url` dari `server/catalog.json` jika ada entri yang cocok.
+
+## Menambah konten custom
+
+Edit `server/catalog.json`, tambah objek baru:
+
+```json
+{
+  "id": 3,
+  "tmdb_id": 123,
+  "type": "movie",
+  "title": "Judul Film",
+  "video_url": "https://.../stream.m3u8",
+  "added_at": "2026-08-15"
+}
+```
+
+Untuk TV, isi `episodes` dengan array `{season, episode, title, video_url}`.
+Backend membaca file ini ulang tiap request — cukup edit dan refresh halaman.
+`video_url` tetap mengarah ke HLS/DASH eksternal (Bunny, CF Stream, dsb);
+backend tidak menghosting file video.
 
 ## Struktur
 
@@ -45,21 +85,23 @@ src/
   components/ # Navbar, Hero, Row, PosterCard, Skeleton, ikon SVG custom, dll.
   pages/      # Home, Browse, Search, Detail, Watch, Watchlist, Setup, NotFound
   styles/     # design system dipecah per lapisan (tokens → layout → komponen → halaman)
+server/
+  index.js    # backend Express: proxy TMDB + /api/catalog + static dist/ (produksi)
+  catalog.json # seed entri konten custom (edit manual)
 ```
 
 ## Catatan arsitektur
 
 - Permintaan TMDB di-cache (memori + sessionStorage, TTL 5 menit) dan poster di-lazy-load.
 - Halaman Detail & Watch di-code-split (lazy) — bundle awal ringan.
-- Bahasa metadata `id-ID`, region watch-provider `ID`.
-- Untuk produksi: proxied-kan TMDB lewat backend supaya API key tidak terekspos di browser.
+- Bahasa metadata `en-US` (sumber utama lengkap), region watch-provider `ID`.
+- Backend opsi B sudah tersedia: proxy TMDB + katalog JSON di `server/`.
 
 ## Peta jalan
 
-1. Backend internal: entri katalog (status draft/publish), auth admin, auto-match TMDB.
-2. Frontend admin panel (tambah/edit entri, review match, upload video ke layanan HLS/DASH).
-3. Sambungkan halaman Watch ke URL stream dari katalog internal.
-4. P2: continue watching, pilihan subtitle.
+1. Panel admin: tambah/edit entri catalog lewat UI (saat ini edit `server/catalog.json` manual).
+2. Auth admin & upload video ke layanan HLS/DASH.
+3. P2: pilihan subtitle.
 
 ---
 

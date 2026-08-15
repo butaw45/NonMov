@@ -2,7 +2,7 @@ import { useEffect, useRef, useState } from 'react'
 import { Link, useParams, useSearchParams } from 'react-router-dom'
 import Artplayer from 'artplayer'
 import Hls from 'hls.js'
-import { tmdb, img, pickProviders } from '../lib/tmdb'
+import { tmdb, img, pickProviders, catalogLookup } from '../lib/tmdb'
 import { useTitle } from '../lib/hooks'
 import { runtimeLabel } from '../lib/utils'
 import { restorePosition, upsertProgress, removeHistory } from '../lib/history'
@@ -14,7 +14,10 @@ export default function Watch() {
   const { type, id } = useParams()
   const kind = type === 'tv' ? 'tv' : 'movie'
   const [sp] = useSearchParams()
-  const src = sp.get('src')
+  const srcQuery = sp.get('src')
+  // URL stream final: prioritas ?src= (manual), lalu catalog backend (otomatis)
+  const [catalogSrc, setCatalogSrc] = useState(null)
+  const src = srcQuery || catalogSrc
   // Konteks episode untuk TV dari query (?season=&episode=) — dipakai resume & label
   const season = kind === 'tv' ? Number(sp.get('season')) || 1 : null
   const episode = kind === 'tv' ? Number(sp.get('episode')) || 1 : null
@@ -43,6 +46,22 @@ export default function Watch() {
       ? `Nonton ${detail.title || detail.name}${kind === 'tv' ? ` — S${season}E${episode}` : ''}`
       : 'Nonton'
   )
+
+  // Cari video_url di catalog backend jika tidak ada ?src= manual
+  useEffect(() => {
+    if (srcQuery || !id) return
+    let on = true
+    catalogLookup(id, kind)
+      .then((entry) => {
+        if (!on) return
+        const videoUrl = kind === 'tv'
+          ? entry?.episodes?.find((ep) => ep.season === season && ep.episode === episode)?.video_url
+          : entry?.video_url
+        if (videoUrl) setCatalogSrc(videoUrl)
+      })
+      .catch(() => {})
+    return () => { on = false }
+  }, [srcQuery, id, kind, season, episode])
 
   useEffect(() => {
     let on = true

@@ -26,6 +26,16 @@ Dokumen PRD lengkap: `docs/prd-tmdb-netflix-clone.md`.
 - `src/components/` — komponen UI (Navbar, Hero, Row, PosterCard, dll)
 - `src/lib/` — klien TMDB (`tmdb.js`), watchlist lokal (`watchlist.js`), hooks, utils
 - `src/styles/` — CSS (tokens, layout, components, pages)
+- `server/` — backend minimal Express: proxy TMDB, `/api/catalog`, static serve `dist/` (produksi)
+  - `server/index.js` — entry server (port 4001)
+  - `server/catalog.json` — seed konten custom (di-commit; edit manual untuk tambah entri)
+  - `server/.env` — API key TMDB (gitignore; contoh di `server/.env.example`)
+
+## Perintah Backend
+
+- `cd server && npm install` — install dependensi backend (Express)
+- `cd server && npm run dev` — backend dev (load `server/.env` via `--env-file`, watch restart)
+- `cd server && npm start` — produksi: static `dist/` + proxy TMDB (butuh `npm run build` dulu di root)
 
 ## Aturan Workflow (WAJIB diikuti agen)
 

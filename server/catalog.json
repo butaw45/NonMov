@@ -1,0 +1,26 @@
+[
+  {
+    "id": 1,
+    "tmdb_id": 550,
+    "type": "movie",
+    "title": "Fight Club",
+    "video_url": "https://test-streams.mux.dev/x36xhzz/x36xhzz.m3u8",
+    "added_at": "2026-08-15"
+  },
+  {
+    "id": 2,
+    "tmdb_id": 1399,
+    "type": "tv",
+    "title": "Game of Thrones",
+    "video_url": null,
+    "episodes": [
+      {
+        "season": 1,
+        "episode": 1,
+        "title": "Winter Is Coming",
+        "video_url": "https://test-streams.mux.dev/x36xhzz/x36xhzz.m3u8"
+      }
+    ],
+    "added_at": "2026-08-15"
+  }
+]
