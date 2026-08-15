@@ -22,14 +22,16 @@ Dokumen PRD lengkap: `docs/prd-tmdb-netflix-clone.md`.
 ## Struktur
 
 - `src/main.jsx`, `src/App.jsx` — entry point & routing
-- `src/pages/` — 8 halaman (Home, Browse, Search, Detail, Watch, Watchlist, Setup, NotFound)
-- `src/components/` — komponen UI (Navbar, Hero, Row, PosterCard, dll)
-- `src/lib/` — klien TMDB (`tmdb.js`), watchlist lokal (`watchlist.js`), hooks, utils
+- `src/pages/` — 11 halaman (Home, Browse, Search, Detail, Watch, Watchlist, Setup, NotFound, Admin, AdminEntry, AdminLogin)
+- `src/components/` — komponen UI (Navbar, Hero, Row, PosterCard, AdminLayout, dll)
+- `src/lib/` — klien TMDB (`tmdb.js`), klien Admin API (`api.js`), watchlist lokal (`watchlist.js`), history (`history.js`), hooks, utils
 - `src/styles/` — CSS (tokens, layout, components, pages)
-- `server/` — backend minimal Express: proxy TMDB, `/api/catalog`, static serve `dist/` (produksi)
+- `server/` — backend minimal Express: proxy TMDB, `/api/catalog`, Admin API `/admin/api/*`, static serve `dist/` (produksi)
   - `server/index.js` — entry server (port 4001)
-  - `server/catalog.json` — seed konten custom (di-commit; edit manual untuk tambah entri)
-  - `server/.env` — API key TMDB (gitignore; contoh di `server/.env.example`)
+  - `server/admin.js` — business logic admin (auth sesi, CRUD entri, auto-match TMDB)
+  - `server/adminRoutes.js` — Express router `/admin/api/*` (proteksi cookie `admin_session`)
+  - `server/catalog.json` — katalog konten custom `{ entries, sessions }` (di-commit; kelola via `/admin`)
+  - `server/.env` — API key TMDB + `ADMIN_USER`/`ADMIN_PASS` (gitignore; contoh di `server/.env.example`)
 
 ## Perintah Backend
 

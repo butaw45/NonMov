@@ -16,6 +16,11 @@ import NotFound from './pages/NotFound'
 // Halaman berat (detail & player) dimuat terpisah supaya bundle awal tetap ringan.
 const Detail = lazy(() => import('./pages/Detail'))
 const Watch = lazy(() => import('./pages/Watch'))
+// Admin panel (Issue #6) — lazy supaya tidak membebani bundle publik
+const AdminLogin = lazy(() => import('./pages/AdminLogin'))
+const AdminLayout = lazy(() => import('./components/AdminLayout'))
+const Admin = lazy(() => import('./pages/Admin'))
+const AdminEntry = lazy(() => import('./pages/AdminEntry'))
 
 function ScrollToTop() {
   const { pathname } = useLocation()
@@ -31,7 +36,18 @@ export default function App() {
   return (
     <BrowserRouter>
       <ScrollToTop />
-      <Navbar />
+      <AppShell />
+    </BrowserRouter>
+  )
+}
+
+function AppShell() {
+  const { pathname } = useLocation()
+  const isAdmin = pathname.startsWith('/admin')
+
+  return (
+    <>
+      {!isAdmin && <Navbar />}
       <ErrorBoundary>
         <main>
           <Suspense fallback={<DetailSkeleton />}>
@@ -42,13 +58,20 @@ export default function App() {
               <Route path="/judul/:type/:id" element={<Detail />} />
               <Route path="/tonton/:type/:id" element={<Watch />} />
               <Route path="/watchlist" element={<Watchlist />} />
+              {/* Admin panel (Issue #6) */}
+              <Route path="/admin/login" element={<AdminLogin />} />
+              <Route path="/admin" element={<AdminLayout />}>
+                <Route index element={<Admin />} />
+                <Route path="entry" element={<AdminEntry />} />
+                <Route path="entry/:id" element={<AdminEntry />} />
+              </Route>
               <Route path="*" element={<NotFound />} />
             </Routes>
           </Suspense>
         </main>
       </ErrorBoundary>
-      <Footer />
-      <BottomNav />
-    </BrowserRouter>
+      {!isAdmin && <Footer />}
+      {!isAdmin && <BottomNav />}
+    </>
   )
 }
