@@ -133,7 +133,6 @@ export default function IframePlayer({
         ref={iframeRef}
         src={embedUrl()}
         allowFullScreen
-        sandbox="allow-scripts allow-same-origin allow-forms allow-popups"
         style={{
           width: '100%',
           aspectRatio: '16/9',
