@@ -6,6 +6,7 @@ import { tmdb, img, pickProviders, catalogLookup, fetchConfig } from '../lib/tmd
 import { useTitle } from '../lib/hooks'
 import { runtimeLabel } from '../lib/utils'
 import { restorePosition, upsertProgress, removeHistory } from '../lib/history'
+import { resolveProviders } from '../lib/providers'
 import { IconArrowL, IconExt } from '../components/Icons'
 import IframePlayer from '../components/IframePlayer'
 
@@ -20,7 +21,7 @@ export default function Watch() {
   const [catalogEntry, setCatalogEntry] = useState(null)
   const [config, setConfig] = useState(null)
   const [resolving, setResolving] = useState(true)
-  const src = srcQuery || catalogEntry?.video_url
+  const [activeIdx, setActiveIdx] = useState(0)
   // Konteks episode untuk TV dari query (?season=&episode=) — dipakai resume & label
   const season = kind === 'tv' ? Number(sp.get('season')) || 1 : null
   const episode = kind === 'tv' ? Number(sp.get('episode')) || 1 : null
@@ -198,28 +199,43 @@ export default function Watch() {
     return `/tonton/tv/${id}?${q}`
   }
 
-  // Dual player: viduki vs self-hosted (dengan fallback ke konfigurasi global)
-  const entry = catalogEntry
-  const isViduki = entry?.video_provider === 'viduki' || (!entry && config?.viduki_enabled)
-  const vidukiTmdbId = entry?.tmdb_id ?? (isViduki ? Number(id) : undefined)
-  const vidukiType = entry?.viduki_type || kind
-  const vidukiApi = entry?.viduki_api || config?.viduki_default_api || 2
-  const vidukiColor = entry?.viduki_color || config?.viduki_color || '#ef4444'
-  const hasStream = src || isViduki
+  // Player provider selector: resolve list dari entry/config, aktif dari dropdown
+  const providers = resolveProviders(catalogEntry, config, kind)
+  const active = providers[activeIdx] ?? providers[0]
+  const isVidukiActive = active?.type === 'viduki'
+  const src = srcQuery || (active?.type === 'self' ? active.video_url : undefined)
+  const showViduki = isVidukiActive && !srcQuery
+  const hasStream = src || isVidukiActive
+  const vidukiTmdbId = active?.type === 'viduki' ? (catalogEntry?.tmdb_id ?? Number(id)) : undefined
 
   return (
     <div className="watch-page">
       {hasStream ? (
         <>
-          {isViduki ? (
+          {providers.length > 1 && (
+            <div className="provider-select">
+              <label htmlFor="watch-provider">Provider</label>
+              <select
+                id="watch-provider"
+                className="field"
+                value={activeIdx}
+                onChange={(e) => setActiveIdx(Number(e.target.value))}
+              >
+                {providers.map((p, i) => (
+                  <option key={i} value={i}>{p.label}</option>
+                ))}
+              </select>
+            </div>
+          )}
+          {showViduki ? (
             <div className="player-shell">
               <IframePlayer
-                api={vidukiApi}
+                api={active?.viduki_api || config?.viduki_default_api || 2}
                 tmdbId={vidukiTmdbId}
-                type={vidukiType}
+                type={active?.viduki_type || kind}
                 season={season}
                 episode={episode}
-                color={vidukiColor}
+                color={active?.viduki_color || config?.viduki_color || '#ef4444'}
               />
             </div>
           ) : (
