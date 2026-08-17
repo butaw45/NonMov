@@ -1,26 +1,31 @@
 import { useEffect, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { adminApi } from '../lib/api'
+import { PROVIDER_TYPES } from '../lib/providers'
 
 export default function AdminSettings() {
   const navigate = useNavigate()
 
-  const [vidukiEnabled, setVidukiEnabled] = useState(true)
-  const [vidukiDefaultApi, setVidukiDefaultApi] = useState(2)
-  const [vidukiColor, setVidukiColor] = useState('#ef4444')
+  // Pool provider global (config.json → providers[]). id dibuat server.
+  const [providers, setProviders] = useState([])
 
   const [loading, setLoading] = useState(true)
   const [saving, setSaving] = useState(false)
   const [error, setError] = useState('')
   const [saved, setSaved] = useState(false)
 
+  // State sementara untuk form "Tambah Provider"
+  const [addType, setAddType] = useState('viduki')
+  const [addLabel, setAddLabel] = useState('')
+  const [addVidukiApi, setAddVidukiApi] = useState(2)
+  const [addVidukiColor, setAddVidukiColor] = useState('#ef4444')
+  const [addMediaType, setAddMediaType] = useState('') // '' = null (keduanya)
+
   useEffect(() => {
     adminApi
       .getConfig()
       .then((c) => {
-        setVidukiEnabled(c.viduki_enabled ?? true)
-        setVidukiDefaultApi(c.viduki_default_api ?? 2)
-        setVidukiColor(c.viduki_color ?? '#ef4444')
+        setProviders(c.providers || [])
       })
       .catch((err) => {
         if (err.authExpired) {
@@ -32,16 +37,44 @@ export default function AdminSettings() {
       .finally(() => setLoading(false))
   }, [navigate])
 
+  const mediaTypeLabel = (mt) =>
+    mt === 'movie' ? 'Movie' : mt === 'tv' ? 'TV' : 'Movie + TV'
+
+  // Tambah provider baru ke daftar (id dibuat server saat Simpan).
+  function onAddProvider(e) {
+    e.preventDefault()
+    setError('')
+    const p = {
+      type: addType,
+      label: addLabel.trim() || PROVIDER_TYPES[addType].label,
+      viduki_api: addType === 'viduki' ? Number(addVidukiApi) : undefined,
+      viduki_color: addType === 'viduki' ? addVidukiColor : undefined,
+      media_type: addMediaType === '' ? null : addMediaType,
+      enabled: true,
+    }
+    setProviders([...providers, p])
+    // reset form
+    setAddLabel('')
+    setAddMediaType('')
+  }
+
+  function onToggleEnabled(i) {
+    setProviders(providers.map((p, j) => (j === i ? { ...p, enabled: !p.enabled } : p)))
+  }
+
+  function onRemove(i) {
+    setProviders(providers.filter((_, j) => j !== i))
+  }
+
   async function onSave(e) {
     e.preventDefault()
     setError('')
     setSaved(false)
     setSaving(true)
     try {
+      // Kirim shape lengkap; id dibuang — server yang bikin saat simpan.
       await adminApi.updateConfig({
-        viduki_enabled: vidukiEnabled,
-        viduki_default_api: Number(vidukiDefaultApi),
-        viduki_color: vidukiColor,
+        providers: providers.map(({ id, ...p }) => p),
       })
       setSaved(true)
     } catch (err) {
@@ -64,40 +97,92 @@ export default function AdminSettings() {
       {saved && <p className="hint">Pengaturan tersimpan.</p>}
 
       <form className="admin-card" onSubmit={onSave}>
-        <label>
-          <input
-            type="checkbox"
-            checked={vidukiEnabled}
-            onChange={(e) => setVidukiEnabled(e.target.checked)}
-          />{' '}
-          Aktifkan viduki.net (auto-fallback)
-        </label>
+        <h3>Provider Global</h3>
+        <p className="hint">
+          Pool penyedia tontonan yang dipakai semua judul (kecuali ada override
+          self-hosted per judul). Matikan/nyalakan toggle untuk aktif-nonaktif.
+        </p>
 
+        {providers.length === 0 && (
+          <p className="hint">Belum ada provider. Tambahkan di bawah.</p>
+        )}
+        {providers.map((p, i) => (
+          <div className="provider-item" key={i}>
+            <span>
+              <strong>{p.label}</strong> · <em>{PROVIDER_TYPES[p.type].label}</em>
+              <span className="badge">{mediaTypeLabel(p.media_type)}</span>
+            </span>
+            <label className="provider-toggle">
+              <input
+                type="checkbox"
+                checked={p.enabled}
+                onChange={() => onToggleEnabled(i)}
+              />{' '}
+              Aktif
+            </label>
+            <button type="button" className="btn btn-ghost btn-sm" onClick={() => onRemove(i)}>
+              Hapus
+            </button>
+          </div>
+        ))}
+
+        <h4>Tambah Provider</h4>
         <label>
-          API Default
-          <select
-            className="field"
-            value={vidukiDefaultApi}
-            onChange={(e) => setVidukiDefaultApi(Number(e.target.value))}
-          >
-            <option value="1">API 1 — Multi Server</option>
-            <option value="2">API 2 — Multi Language</option>
-            <option value="3">API 3 — Multi Embeds</option>
-            <option value="4">API 4 — Premium Embeds</option>
+          Tipe Provider
+          <select className="field" value={addType} onChange={(e) => setAddType(e.target.value)}>
+            {Object.entries(PROVIDER_TYPES).map(([key, spec]) => (
+              <option key={key} value={key}>{spec.label}</option>
+            ))}
           </select>
         </label>
 
         <label>
-          Warna Player
+          Label
           <input
             className="field"
-            type="color"
-            value={vidukiColor}
-            onChange={(e) => setVidukiColor(e.target.value)}
+            type="text"
+            value={addLabel}
+            placeholder={PROVIDER_TYPES[addType].label}
+            onChange={(e) => setAddLabel(e.target.value)}
           />
         </label>
 
+        {addType === 'viduki' && (
+          <>
+            <label>
+              API viduki
+              <select className="field" value={addVidukiApi} onChange={(e) => setAddVidukiApi(Number(e.target.value))}>
+                <option value="1">API 1 — Multi Server</option>
+                <option value="2">API 2 — Multi Language</option>
+                <option value="3">API 3 — Multi Embeds</option>
+                <option value="4">API 4 — Premium Embeds</option>
+              </select>
+            </label>
+            <label>
+              Warna Player
+              <input
+                className="field"
+                type="color"
+                value={addVidukiColor}
+                onChange={(e) => setAddVidukiColor(e.target.value)}
+              />
+            </label>
+          </>
+        )}
+
+        <label>
+          Media Type
+          <select className="field" value={addMediaType} onChange={(e) => setAddMediaType(e.target.value)}>
+            <option value="">Movie + TV (semua)</option>
+            <option value="movie">Movie</option>
+            <option value="tv">TV</option>
+          </select>
+        </label>
+
         <div className="form-actions">
+          <button type="button" className="btn" onClick={onAddProvider}>
+            Tambah Provider
+          </button>
           <button className="btn btn-primary" type="submit" disabled={saving}>
             {saving ? 'Menyimpan...' : 'Simpan Pengaturan'}
           </button>

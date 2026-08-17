@@ -144,46 +144,22 @@ function validateVidukiFields(data, { strict = false } = {}) {
   }
 }
 
-const NEXT_HEX = /^#[0-9a-fA-F]{6}$/
-
-// Validasi + normalisasi ringan array provider (Task A — provider selector).
-// Dipakai createEntry & updateEntry; tidak diekspor.
+// Normalisasi array provider override per-judul (Issue #19 — Slice B).
+// SELF-ONLY: hanya terima item type 'self'; item type 'viduki' di-DROP
+// (filter, bukan throw — bersih utk migrasi data lama). Dipakai createEntry
+// & updateEntry; tidak diekspor.
 function normalizeProviders(providers) {
   if (providers === undefined) return undefined
   if (!Array.isArray(providers) || providers.length === 0) return []
 
-  return providers.map((p, i) => {
-    if (typeof p !== 'object' || p === null || Array.isArray(p)) {
-      throw new Error(`provider ke-${i + 1} harus berupa objek`)
-    }
-    const { type, label } = p
-    if (type !== 'self' && type !== 'viduki') {
-      throw new Error(`provider ke-${i + 1}: type harus self atau viduki`)
-    }
-
-    if (type === 'self') {
-      const out = { type, label: label || 'Self-hosted' }
+  return providers
+    .filter((p) => p && typeof p === 'object' && !Array.isArray(p) && p.type === 'self')
+    .map((p) => {
+      const out = { type: 'self', label: p.label || 'Self-hosted' }
       if (p.video_url) out.video_url = p.video_url
       if (p.video_type) out.video_type = p.video_type
       return out
-    }
-
-    // viduki
-    if (p.viduki_api !== undefined && !VIDUKI_APIS.includes(Number(p.viduki_api))) {
-      throw new Error(`provider ke-${i + 1}: viduki_api harus ${VIDUKI_APIS.join('|')}`)
-    }
-    if (p.viduki_type !== undefined && !['tv', 'movie'].includes(p.viduki_type)) {
-      throw new Error(`provider ke-${i + 1}: viduki_type harus tv atau movie`)
-    }
-    if (p.viduki_color !== undefined && !NEXT_HEX.test(p.viduki_color)) {
-      throw new Error(`provider ke-${i + 1}: viduki_color harus format hex #RRGGBB`)
-    }
-    const out = { type, label: label || 'viduki.net' }
-    if (p.viduki_api !== undefined) out.viduki_api = Number(p.viduki_api)
-    if (p.viduki_type) out.viduki_type = p.viduki_type
-    if (p.viduki_color) out.viduki_color = p.viduki_color
-    return out
-  })
+    })
 }
 
 export function createEntry({ type, tmdb_id, title, status, video_url, video_type, episodes, video_provider, viduki_api, viduki_type, viduki_color, providers }) {

@@ -1,4 +1,15 @@
 {
+  "providers": [
+    {
+      "id": "p_6i9jrj16",
+      "type": "viduki",
+      "label": "viduki.net",
+      "viduki_api": 2,
+      "viduki_color": "#ef4444",
+      "media_type": null,
+      "enabled": true
+    }
+  ],
   "viduki_enabled": true,
   "viduki_default_api": 2,
   "viduki_color": "#ef4444"
