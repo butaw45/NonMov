@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react'
 import { useNavigate, useParams, Link } from 'react-router-dom'
 import { adminApi } from '../lib/api'
 import { img } from '../lib/tmdb'
+import { normalizeProvider, flatToProviders } from '../lib/providers'
 
 export default function AdminEntry() {
   const { id } = useParams() // ada = mode edit
@@ -17,16 +18,21 @@ export default function AdminEntry() {
   const [picked, setPicked] = useState(null) // hasil TMDB yang dipilih
   const [manualId, setManualId] = useState('')
   const [manualType, setManualType] = useState('movie')
-  const [videoUrl, setVideoUrl] = useState('')
-  const [videoType, setVideoType] = useState('hls')
   const [status, setStatus] = useState('draft')
   const [title, setTitle] = useState('')
 
-  // Provider viduki
-  const [videoProvider, setVideoProvider] = useState('self') // 'self' | 'viduki'
-  const [vidukiApi, setVidukiApi] = useState(2)
-  const [vidukiType, setVidukiType] = useState('movie')
-  const [vidukiColor, setVidukiColor] = useState('#ef4444')
+  // Penyedia tontonan (array Provider: self | viduki)
+  const [providers, setProviders] = useState([])
+  // State sementara untuk form "Tambah Provider"
+  const [addOpen, setAddOpen] = useState(false)
+  const [addType, setAddType] = useState('self')
+  const [addUrl, setAddUrl] = useState('')
+  const [addVideoType, setAddVideoType] = useState('hls')
+  const [addVidukiApi, setAddVidukiApi] = useState(2)
+  const [addVidukiType, setAddVidukiType] = useState('movie')
+  const [addVidukiColor, setAddVidukiColor] = useState('#ef4444')
+  const [addLabel, setAddLabel] = useState('')
+  const [addError, setAddError] = useState('')
   const [showPreview, setShowPreview] = useState(false)
 
   const [error, setError] = useState('')
@@ -42,14 +48,10 @@ export default function AdminEntry() {
         setTitle(e.title || '')
         setManualId(String(e.tmdb_id))
         setManualType(e.type)
-        setVideoUrl(e.video_url || '')
-        setVideoType(e.video_type || 'hls')
         setStatus(e.status || 'draft')
-        // viduki fields
-        setVideoProvider(e.video_provider || 'self')
-        setVidukiApi(e.viduki_api || 2)
-        setVidukiType(e.viduki_type || e.type || 'movie')
-        setVidukiColor(e.viduki_color || '#ef4444')
+        // Penyedia: prefer providers[] tersimpan, fallback ke flat legacy
+        if (e.providers?.length) setProviders(e.providers.map(normalizeProvider))
+        else setProviders(flatToProviders(e))
       })
       .catch((err) => {
         if (err.authExpired) {
@@ -85,31 +87,49 @@ export default function AdminEntry() {
     setResults(null)
   }
 
+  function onAddProvider(e) {
+    e.preventDefault()
+    setAddError('')
+    // Validasi ringan client-side
+    if (addType === 'self') {
+      if (!addUrl.trim()) {
+        setAddError('Isi Video URL untuk provider self-hosted.')
+        return
+      }
+    } else {
+      const api = Number(addVidukiApi)
+      if (!(api >= 1 && api <= 4)) {
+        setAddError('API viduki harus antara 1–4.')
+        return
+      }
+    }
+    const base = { type: addType, label: addLabel.trim() || undefined }
+    const fields =
+      addType === 'self'
+        ? {
+            video_url: addUrl.trim(),
+            video_type: addVideoType,
+          }
+        : { viduki_api: Number(addVidukiApi), viduki_type: addVidukiType, viduki_color: addVidukiColor }
+    setProviders([...providers, normalizeProvider({ ...base, ...fields })])
+    // reset state add
+    setAddOpen(false)
+    setAddType('self')
+    setAddUrl('')
+    setAddVideoType('hls')
+    setAddVidukiApi(2)
+    setAddVidukiType('movie')
+    setAddVidukiColor('#ef4444')
+    setAddLabel('')
+    setAddError('')
+  }
+
   async function onSave(e) {
     e.preventDefault()
     setError('')
     setSaving(true)
     try {
-      const payload = {
-        status,
-        video_provider: videoProvider,
-      }
-
-      if (videoProvider === 'viduki') {
-        payload.viduki_api = vidukiApi
-        payload.viduki_type = vidukiType
-        payload.viduki_color = vidukiColor
-        // self fields di-clear
-        payload.video_url = null
-        payload.video_type = null
-      } else {
-        payload.video_url = videoUrl || null
-        payload.video_type = videoUrl ? videoType : null
-        // viduki fields di-clear
-        payload.viduki_api = null
-        payload.viduki_type = null
-        payload.viduki_color = null
-      }
+      const payload = { status, providers }
 
       if (isEdit) {
         await adminApi.updateEntry(id, payload)
@@ -139,6 +159,8 @@ export default function AdminEntry() {
       setSaving(false)
     }
   }
+
+  const vidukiProvider = providers.find((p) => p.type === 'viduki')
 
   if (loadingEntry) return <div className="admin-page"><p className="hint">Memuat entri...</p></div>
 
@@ -224,100 +246,121 @@ export default function AdminEntry() {
         )}
 
         {/* Provider Selection */}
-        <label>
-          Sumber Video
-          <select
-            className="field"
-            value={videoProvider}
-            onChange={(e) => setVideoProvider(e.target.value)}
-          >
-            <option value="self">Self-hosted (ArtPlayer)</option>
-            <option value="viduki">viduki.net (Embed)</option>
-          </select>
-        </label>
+        <h3>Penyedia Tontonan</h3>
+        {providers.length === 0 && <p className="hint">Belum ada provider. Tambahkan di bawah.</p>}
+        {providers.map((p, i) => (
+          <div className="provider-item" key={i}>
+            <span><strong>{p.label}</strong> · <em>{p.type === 'self' ? 'Self-hosted' : 'viduki.net'}</em></span>
+            <button type="button" className="btn btn-ghost btn-sm" onClick={() => setProviders(providers.filter((_, j) => j !== i))}>Hapus</button>
+          </div>
+        ))}
 
-        {videoProvider === 'self' && (
-          <>
+        {!addOpen ? (
+          <div className="form-row">
+            <button type="button" className="btn btn-sm" onClick={() => setAddOpen(true)}>Tambah Provider</button>
+          </div>
+        ) : (
+          <form className="provider-form" onSubmit={onAddProvider}>
+            <h4>Provider Baru</h4>
             <label>
-              Video URL (opsional untuk series)
+              Tipe Provider
+              <select className="field" value={addType} onChange={(e) => setAddType(e.target.value)}>
+                <option value="self">Self-hosted (ArtPlayer)</option>
+                <option value="viduki">viduki.net (Embed)</option>
+              </select>
+            </label>
+
+            {addType === 'self' ? (
+              <>
+                <label>
+                  Video URL
+                  <input
+                    className="field"
+                    type="url"
+                    placeholder="https://.../playlist.m3u8"
+                    value={addUrl}
+                    onChange={(e) => setAddUrl(e.target.value)}
+                  />
+                </label>
+                <label>
+                  Tipe Video
+                  <select className="field" value={addVideoType} onChange={(e) => setAddVideoType(e.target.value)}>
+                    <option value="hls">HLS (.m3u8)</option>
+                    <option value="dash">DASH (.mpd)</option>
+                    <option value="embed">Embed (iframe)</option>
+                  </select>
+                </label>
+              </>
+            ) : (
+              <>
+                <label>
+                  API viduki
+                  <select className="field" value={addVidukiApi} onChange={(e) => setAddVidukiApi(Number(e.target.value))}>
+                    <option value="1">API 1 — Multi Server</option>
+                    <option value="2">API 2 — Multi Language</option>
+                    <option value="3">API 3 — Multi Embeds</option>
+                    <option value="4">API 4 — Premium Embeds</option>
+                  </select>
+                </label>
+                <label>
+                  Tipe viduki
+                  <select className="field" value={addVidukiType} onChange={(e) => setAddVidukiType(e.target.value)}>
+                    <option value="movie">Movie</option>
+                    <option value="tv">TV Series</option>
+                  </select>
+                </label>
+                <label>
+                  Warna Player (opsional)
+                  <input
+                    className="field"
+                    type="color"
+                    value={addVidukiColor}
+                    onChange={(e) => setAddVidukiColor(e.target.value)}
+                  />
+                </label>
+              </>
+            )}
+
+            <label>
+              Label (opsional)
               <input
                 className="field"
-                type="url"
-                placeholder="https://.../playlist.m3u8"
-                value={videoUrl}
-                onChange={(e) => setVideoUrl(e.target.value)}
+                placeholder={addType === 'self' ? 'Self-hosted' : 'viduki.net'}
+                value={addLabel}
+                onChange={(e) => setAddLabel(e.target.value)}
               />
             </label>
-            {videoUrl && (
-              <label>
-                Tipe Video
-                <select className="field" value={videoType} onChange={(e) => setVideoType(e.target.value)}>
-                  <option value="hls">HLS (.m3u8)</option>
-                  <option value="dash">DASH (.mpd)</option>
-                  <option value="embed">Embed (iframe)</option>
-                </select>
-              </label>
-            )}
-          </>
+
+            {addError && <p className="error-box">{addError}</p>}
+
+            <div className="form-row">
+              <button className="btn btn-primary btn-sm" type="submit">Tambah</button>
+              <button type="button" className="btn btn-ghost btn-sm" onClick={() => { setAddOpen(false); setAddError('') }}>Batal</button>
+            </div>
+          </form>
         )}
 
-        {videoProvider === 'viduki' && (
+        {/* Preview viduki — provider viduki pertama */}
+        {vidukiProvider && manualId && (
           <>
-            <label>
-              API viduki
-              <select
-                className="field"
-                value={vidukiApi}
-                onChange={(e) => setVidukiApi(Number(e.target.value))}
-              >
-                <option value="1">API 1 — Multi Server</option>
-                <option value="2">API 2 — Multi Language</option>
-                <option value="3">API 3 — Multi Embeds</option>
-                <option value="4">API 4 — Premium Embeds</option>
-              </select>
-            </label>
-
-            <label>
-              Tipe viduki
-              <select
-                className="field"
-                value={vidukiType}
-                onChange={(e) => setVidukiType(e.target.value)}
-              >
-                <option value="movie">Movie</option>
-                <option value="tv">TV Series</option>
-              </select>
-            </label>
-
-            <label>
-              Warna Player (opsional)
-              <input
-                className="field"
-                type="color"
-                value={vidukiColor}
-                onChange={(e) => setVidukiColor(e.target.value)}
-              />
-            </label>
-
-            {/* Preview iframe */}
             <div className="form-row">
               <button
                 type="button"
                 className="btn btn-ghost btn-sm"
                 onClick={() => setShowPreview(!showPreview)}
               >
-                {showPreview ? 'Sembunyikan' : 'Tampilkan'} Preview
+                {showPreview ? 'Sembunyikan' : 'Tampilkan'} Preview viduki
               </button>
             </div>
-            {showPreview && manualId && (
+            {showPreview && (
               <div className="preview-box">
                 <p className="hint">
-                  Preview: https://viduki.net/{vidukiApi}/{vidukiType}/{manualId}
-                  {vidukiType === 'tv' && '/1/1'}
-                  ?color={encodeURIComponent(vidukiColor)}
+                  Preview: https://viduki.net/{vidukiProvider.viduki_api ?? 2}/{vidukiProvider.viduki_type ?? manualType}/{manualId}
+                  {(vidukiProvider.viduki_type ?? manualType) === 'tv' && '/1/1'}
+                  ?color={encodeURIComponent(vidukiProvider.viduki_color ?? '#ef4444')}
                 </p>
                 <iframe
-                  src={`https://viduki.net/${vidukiApi}/${vidukiType}/${manualId}${vidukiType === 'tv' ? '/1/1' : ''}?color=${encodeURIComponent(vidukiColor)}`}
+                  src={`https://viduki.net/${vidukiProvider.viduki_api ?? 2}/${vidukiProvider.viduki_type ?? manualType}/${manualId}${(vidukiProvider.viduki_type ?? manualType) === 'tv' ? '/1/1' : ''}?color=${encodeURIComponent(vidukiProvider.viduki_color ?? '#ef4444')}`}
                   style={{
                     width: '100%',
                     aspectRatio: '16/9',
