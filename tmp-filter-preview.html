@@ -1,0 +1,119 @@
+<!doctype html>
+<html lang="id">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Preview — Filter Lanjutan Browse (Seluloid)</title>
+<style>
+  :root{
+    --bg:#0b0b0f; --card:#141419; --line:#26262e; --text:#f2f2f5; --faint:#9a9aa3; --accent:#e50914;
+  }
+  *{box-sizing:border-box}
+  body{margin:0;background:var(--bg);color:var(--text);
+    font-family:system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;padding:24px}
+  h1{font-size:22px;margin:0 0 6px}
+  h2{font-size:18px;margin:4px 0 12px}
+  .note{color:var(--faint);font-size:13px;margin:0 0 18px}
+  .browse-bar{display:flex;gap:16px;align-items:flex-end;flex-wrap:wrap;
+    background:var(--card);border:1px solid var(--line);border-radius:12px;padding:14px 16px;margin-bottom:18px}
+  .tabs{display:flex;gap:4px}
+  .tabs button{background:transparent;border:1px solid var(--line);color:var(--faint);
+    border-radius:8px;padding:7px 14px;font-weight:600;cursor:pointer}
+  .tabs button.on{background:var(--accent);border-color:var(--accent);color:#fff}
+  label{display:flex;flex-direction:column;gap:6px;font-size:12px;color:var(--faint)}
+  select.field{background:#1a1a20;color:var(--text);border:1px solid var(--line);
+    border-radius:8px;padding:7px 10px;font-size:13px;min-width:130px}
+  input.field-range{width:160px;accent-color:var(--accent);cursor:pointer}
+  .rating-val{color:var(--text);font-weight:700}
+  .spacer{flex:1}
+  .grid{display:grid;grid-template-columns:repeat(6,1fr);gap:12px}
+  .card .poster{width:100%;aspect-ratio:2/3;border-radius:8px;border:1px solid var(--line);
+    background:linear-gradient(160deg,#1c1c24,#101016);display:flex;flex-direction:column;
+    justify-content:flex-end;padding:8px;font-size:11px;font-weight:600}
+  .card .meta{font-size:10px;color:var(--faint);font-weight:400;margin-top:2px}
+  .applies{color:var(--faint);font-size:12px;margin:0 0 14px}
+  .applies code{color:var(--text);background:#1a1a20;padding:2px 6px;border-radius:6px}
+</style>
+</head>
+<body>
+  <h1>Preview — Filter Lanjutan Browse (rating slider + negara)</h1>
+  <p class="note">Mock UI untuk <code>docs/superpowers/specs/2026-08-17-advanced-filters-design.md</code>.
+  Bukan kode produksi; hanya untuk menyetujui tampilan & perilaku. Genre/tahun/urut yang sudah ada tidak berubah.</p>
+
+  <div class="browse-bar">
+    <div class="tabs" role="tablist" aria-label="Tipe konten">
+      <button class="on" id="tab-movie">Film</button>
+      <button id="tab-tv">Series</button>
+    </div>
+    <div class="spacer"></div>
+
+    <label>Minimal rating <span class="rating-val" id="rval"></span>
+      <input type="range" min="0" max="10" step="0.5" class="field-range" id="rating" value="0" aria-label="Rating minimum" />
+    </label>
+
+    <label>Negara
+      <select class="field" id="negara">
+        <option value="">Semua negara</option>
+        <option value="ID">Indonesia</option>
+        <option value="US">Amerika Serikat</option>
+        <option value="KR">Korea Selatan</option>
+        <option value="JP">Jepang</option>
+        <option value="GB">Inggris</option>
+        <option value="IN">India</option>
+        <option value="CN">Tiongkok</option>
+        <option value="TH">Thailand</option>
+        <option value="PH">Filipina</option>
+        <option value="FR">Prancis</option>
+        <option value="DE">Jerman</option>
+      </select>
+    </label>
+
+    <label>Tahun
+      <select class="field" id="tahun"><option value="">Semua</option><option>2025</option><option>2024</option></select>
+    </label>
+    <label>Urutkan
+      <select class="field"><option>Popularitas</option><option>Rating tertinggi</option><option>Terbaru</option></select>
+    </label>
+  </div>
+
+  <p class="applies">Parameter discover: <code id="params">page=1 · sort_by=popularity.desc</code></p>
+
+  <div class="grid" id="grid"></div>
+
+<script>
+  const rating = document.getElementById('rating'),
+        rval = document.getElementById('rval'),
+        negara = document.getElementById('negara'),
+        params = document.getElementById('params'),
+        grid = document.getElementById('grid');
+
+  // data dummy: judul + rating + negara
+  const DATA = [
+    {t:'Judul A', r:8.4, c:'ID'}, {t:'Judul B', r:7.1, c:'US'}, {t:'Judul C', r:6.3, c:'KR'},
+    {t:'Judul D', r:9.0, c:'JP'}, {t:'Judul E', r:5.2, c:'GB'}, {t:'Judul F', r:7.8, c:'ID'},
+    {t:'Judul G', r:6.9, c:'US'}, {t:'Judul H', r:8.1, c:'KR'}, {t:'Judul I', r:4.5, c:'IN'},
+    {t:'Judul J', r:7.5, c:'FR'}, {t:'Judul K', r:6.0, c:'TH'}, {t:'Judul L', r:8.8, c:'DE'},
+    {t:'Judul M', r:7.9, c:'PH'},
+  ];
+
+  function render(){
+    const rv = parseFloat(rating.value), nc = negara.value;
+    rval.textContent = rv > 0 ? ': ' + rv.toFixed(1) + '+' : '';
+    const list = DATA.filter(d => (rv <= 0 || d.r >= rv) && (!nc || d.c === nc));
+    const p = ['page=1','sort_by=popularity.desc'];
+    if (rv > 0) p.push('vote_average.gte=' + rv.toFixed(1), 'vote_count.gte=100');
+    if (nc) p.push('with_origin_country=' + nc);
+    params.textContent = p.join(' · ');
+    grid.innerHTML = list.length
+      ? list.map(d => `<div class="card"><div class="poster">${d.t}
+          <span class="meta">★ ${d.r.toFixed(1)} · ${d.c}</span></div></div>`).join('')
+      : '<div style="grid-column:1/-1;color:var(--faint);padding:24px">Tidak ada yang cocok — coba longgarkan rating/negara.</div>';
+  }
+  rating.addEventListener('input', render);
+  negara.addEventListener('change', render);
+  document.getElementById('tab-movie').onclick = (e)=>{e.target.classList.add('on');document.getElementById('tab-tv').classList.remove('on')};
+  document.getElementById('tab-tv').onclick = (e)=>{e.target.classList.add('on');document.getElementById('tab-movie').classList.remove('on')};
+  render();
+</script>
+</body>
+</html>
