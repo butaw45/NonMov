@@ -1,7 +1,6 @@
 import { useEffect, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { adminApi } from '../lib/api'
-import { PROVIDER_TYPES } from '../lib/providers'
 
 export default function AdminSettings() {
   const navigate = useNavigate()
@@ -15,11 +14,11 @@ export default function AdminSettings() {
   const [saved, setSaved] = useState(false)
 
   // State sementara untuk form "Tambah Provider"
-  const [addType, setAddType] = useState('viduki')
   const [addLabel, setAddLabel] = useState('')
-  const [addVidukiApi, setAddVidukiApi] = useState(2)
-  const [addVidukiColor, setAddVidukiColor] = useState('#ef4444')
+  const [addMovieUrl, setAddMovieUrl] = useState('')
+  const [addTvUrl, setAddTvUrl] = useState('')
   const [addMediaType, setAddMediaType] = useState('') // '' = null (keduanya)
+  const [addEnabled, setAddEnabled] = useState(true)
 
   useEffect(() => {
     adminApi
@@ -44,18 +43,32 @@ export default function AdminSettings() {
   function onAddProvider(e) {
     e.preventDefault()
     setError('')
-    const p = {
-      type: addType,
-      label: addLabel.trim() || PROVIDER_TYPES[addType].label,
-      viduki_api: addType === 'viduki' ? Number(addVidukiApi) : undefined,
-      viduki_color: addType === 'viduki' ? addVidukiColor : undefined,
-      media_type: addMediaType === '' ? null : addMediaType,
-      enabled: true,
+    if (!addMovieUrl.trim() || !addMovieUrl.includes('{tmdb_id}')) {
+      setError('URL Template Movie wajib diisi dan memuat placeholder {tmdb_id}.')
+      return
     }
-    setProviders([...providers, p])
+    // Media Type bukan "movie" (null=keduanya atau tv) → TV wajib (server juga menolak).
+    if (addMediaType !== 'movie' && !addTvUrl.trim()) {
+      setError('URL Template TV wajib diisi bila Media Type bukan Movie.');
+      return
+    }
+    setProviders([
+      ...providers,
+      {
+        type: 'embed',
+        label: addLabel.trim() || 'embed',
+        movie_url: addMovieUrl.trim(),
+        tv_url: addTvUrl.trim() || null,
+        media_type: addMediaType === '' ? null : addMediaType,
+        enabled: addEnabled,
+      },
+    ])
     // reset form
     setAddLabel('')
+    setAddMovieUrl('')
+    setAddTvUrl('')
     setAddMediaType('')
+    setAddEnabled(true)
   }
 
   function onToggleEnabled(i) {
@@ -109,8 +122,25 @@ export default function AdminSettings() {
         {providers.map((p, i) => (
           <div className="provider-item" key={i}>
             <span>
-              <strong>{p.label}</strong> · <em>{PROVIDER_TYPES[p.type].label}</em>
+              <strong>{p.label}</strong> <span className="badge">embed</span>
               <span className="badge">{mediaTypeLabel(p.media_type)}</span>
+            </span>
+            <span
+              style={{
+                display: 'block',
+                color: 'var(--mut)',
+                fontSize: 12,
+                wordBreak: 'break-all',
+                fontFamily: 'ui-monospace, monospace',
+              }}
+            >
+              {p.movie_url}
+              {p.tv_url && (
+                <>
+                  <br />
+                  {p.tv_url}
+                </>
+              )}
             </span>
             <label className="provider-toggle">
               <input
@@ -128,47 +158,15 @@ export default function AdminSettings() {
 
         <h4>Tambah Provider</h4>
         <label>
-          Tipe Provider
-          <select className="field" value={addType} onChange={(e) => setAddType(e.target.value)}>
-            {Object.entries(PROVIDER_TYPES).map(([key, spec]) => (
-              <option key={key} value={key}>{spec.label}</option>
-            ))}
-          </select>
-        </label>
-
-        <label>
           Label
           <input
             className="field"
             type="text"
             value={addLabel}
-            placeholder={PROVIDER_TYPES[addType].label}
+            placeholder="embed"
             onChange={(e) => setAddLabel(e.target.value)}
           />
         </label>
-
-        {addType === 'viduki' && (
-          <>
-            <label>
-              API viduki
-              <select className="field" value={addVidukiApi} onChange={(e) => setAddVidukiApi(Number(e.target.value))}>
-                <option value="1">API 1 — Multi Server</option>
-                <option value="2">API 2 — Multi Language</option>
-                <option value="3">API 3 — Multi Embeds</option>
-                <option value="4">API 4 — Premium Embeds</option>
-              </select>
-            </label>
-            <label>
-              Warna Player
-              <input
-                className="field"
-                type="color"
-                value={addVidukiColor}
-                onChange={(e) => setAddVidukiColor(e.target.value)}
-              />
-            </label>
-          </>
-        )}
 
         <label>
           Media Type
@@ -177,6 +175,37 @@ export default function AdminSettings() {
             <option value="movie">Movie</option>
             <option value="tv">TV</option>
           </select>
+        </label>
+
+        <label>
+          URL Template Movie (wajib)
+          <input
+            className="field"
+            type="text"
+            value={addMovieUrl}
+            placeholder="https://.../{tmdb_id}"
+            onChange={(e) => setAddMovieUrl(e.target.value)}
+          />
+        </label>
+
+        <label>
+          URL Template TV
+          <input
+            className="field"
+            type="text"
+            value={addTvUrl}
+            placeholder="https://.../{tmdb_id}/{season}/{episode}"
+            onChange={(e) => setAddTvUrl(e.target.value)}
+          />
+        </label>
+
+        <label className="provider-toggle">
+          <input
+            type="checkbox"
+            checked={addEnabled}
+            onChange={(e) => setAddEnabled(e.target.checked)}
+          />{' '}
+          Aktif
         </label>
 
         <div className="form-actions">

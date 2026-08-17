@@ -1,9 +1,9 @@
 // ------------------------------------------------------------------
-// Konfigurasi global Seluloid (Issue #10, Issue #19)
-// - providers: pool provider global (viduki dkk), menimpa judul
-//   yang TIDAK punya override self-hosted per-judul.
-// - viduki_enabled/viduki_default_api/viduki_color: field legacy,
-//   hanya dipakai untuk migrasi; UI tidak merender lagi.
+// Konfigurasi global Seluloid (Issue #10, Issue #19 lanjutan)
+// - providers: pool embed template global (URL template + placeholder),
+//   menimpa judul yang TIDAK punya override self-hosted per-judul.
+// - Semua provider embed adalah URL template; tipe viduki legacy
+//   dimigrasi otomatis ke embed. Tidak ada warna player (template polos).
 // ------------------------------------------------------------------
 
 import { readFileSync, writeFileSync } from 'node:fs'
@@ -15,79 +15,120 @@ const CONFIG_PATH = path.join(__dirname, 'config.json')
 
 const DEFAULTS = {
   providers: [],
-  viduki_enabled: true,
-  viduki_default_api: 2,
-  viduki_color: '#ef4444',
 }
 
-export const VIDUKI_APIS = [1, 2, 3, 4]
-export const COLOR_RE = /^#[0-9a-fA-F]{6}$/
-
 // Daftar tipe provider global yang dikenal.
-const KNOWN_TYPES = ['viduki']
+const KNOWN_TYPES = ['embed']
 
 // Buat id provider unik (`p_<rand>`), tak diedit user.
 function genId() {
   return 'p_' + Math.random().toString(36).slice(2, 10)
 }
 
-// Seed satu provider viduki dari field legacy bila belum ada `providers`.
-// Mengembalikan objek baru (tidak memutasi `config`).
-function seedProviders(config) {
-  const hasProviders = Array.isArray(config.providers)
-  if (hasProviders) return config.providers
+// Pastikan `value` adalah URL http(s) yang valid; throw bila tidak.
+// (iframe src — skema lain seperti javascript: ditolak, paritas dgn validasi video_url admin.)
+function assertValidUrl(value, field) {
+  let u
+  try {
+    u = new URL(value)
+  } catch {
+    throw new Error(`${field} harus berupa URL yang valid`)
+  }
+  if (u.protocol !== 'http:' && u.protocol !== 'https:') {
+    throw new Error(`${field} harus berprotokol http/https`)
+  }
+}
 
-  if (config.viduki_enabled !== true) return []
+// Migrasi provider legacy `type:'viduki'` ke embed template.
+// Item selain viduki dikembalikan apa adanya (tidak memutasi objek asli).
+function migrateProviders(raw) {
+  if (!Array.isArray(raw.providers)) return []
+  return raw.providers.map((p) => {
+    if (p && p.type === 'viduki') {
+      // Warna dimigrasi di-drop (per keputusan: template polos).
+      return {
+        id: p.id || genId(),
+        type: 'embed',
+        label: p.label || 'viduki.net',
+        movie_url: `https://www.viduki.net/${p.viduki_api || 2}/movie/{tmdb_id}`,
+        tv_url: `https://www.viduki.net/${p.viduki_api || 2}/tv/{tmdb_id}/{season}/{episode}`,
+        media_type: p.media_type ?? null,
+        enabled: p.enabled !== false,
+      }
+    }
+    return p
+  })
+}
 
-  return [{
-    id: genId(),
-    type: 'viduki',
-    label: 'viduki.net',
-    viduki_api: config.viduki_default_api || 2,
-    viduki_color: config.viduki_color || '#ef4444',
-    media_type: null,
-    enabled: true,
-  }]
+// Ada migrasi viduki yang perlu ditulis ulang ke file?
+function hasLegacyViduki(raw) {
+  if (Array.isArray(raw.providers) && raw.providers.some((p) => p && p.type === 'viduki')) {
+    return true
+  }
+  return Object.keys(raw).some((k) => k.startsWith('viduki_'))
+}
+
+// Salinan `raw` tanpa field top-level legacy viduki_*.
+function stripLegacyTopLevel(raw) {
+  const clean = { ...raw }
+  for (const k of Object.keys(clean)) {
+    if (k.startsWith('viduki_')) delete clean[k]
+  }
+  return clean
 }
 
 export function getConfig() {
   try {
     const raw = JSON.parse(readFileSync(CONFIG_PATH, 'utf8'))
-    const providers = seedProviders(raw)
-    // Simpan hasil seed kalau terjadi migrasi (config belum punya providers).
-    if (!Array.isArray(raw.providers)) {
-      writeFileSync(CONFIG_PATH, JSON.stringify({ ...raw, providers }, null, 2) + '\n', 'utf8')
+    const providers = Array.isArray(raw.providers) ? migrateProviders(raw) : []
+    // Tulis ulang bila ada migrasi: simpan hasil mapping & hapus field
+    // top-level viduki_* legacy. Kunci lain tetap dipertahankan.
+    if (hasLegacyViduki(raw)) {
+      writeFileSync(CONFIG_PATH, JSON.stringify({ ...stripLegacyTopLevel(raw), providers }, null, 2) + '\n', 'utf8')
     }
-    return {
-      providers,
-      viduki_enabled: raw.viduki_enabled,
-      viduki_default_api: raw.viduki_default_api,
-      viduki_color: raw.viduki_color,
-    }
+    return { providers }
   } catch {
     return { ...DEFAULTS }
   }
 }
 
-// Validasi satu item provider; throw Error dengan pesan spesifik.
+// Validasi satu item provider; throw Error dengan pesan spesifik (Indonesia).
 function validateProvider(p) {
-  if (typeof p !== 'object' || p === null) {
+  if (typeof p !== 'object' || p === null || Array.isArray(p)) {
     throw new Error('item providers harus berupa objek')
   }
-  if (!KNOWN_TYPES.includes(p.type)) {
-    throw new Error(`type provider tidak dikenal: ${p.type}`)
+  if (p.type !== 'embed') {
+    throw new Error(`type provider harus "embed", bukan "${p.type}"`)
   }
-  if (p.viduki_api !== undefined && !VIDUKI_APIS.includes(p.viduki_api)) {
-    throw new Error('viduki_api harus salah satu dari 1, 2, 3, 4')
+  if (typeof p.movie_url !== 'string' || p.movie_url.trim() === '') {
+    throw new Error('movie_url wajib diisi berupa string')
   }
-  if (p.viduki_color !== undefined &&
-      (typeof p.viduki_color !== 'string' || !COLOR_RE.test(p.viduki_color))) {
-    throw new Error('viduki_color harus berformat #RRGGBB')
+  if (!p.movie_url.includes('{tmdb_id}')) {
+    throw new Error('movie_url harus mengandung placeholder {tmdb_id}')
   }
+  assertValidUrl(p.movie_url, 'movie_url')
+
+  if (p.tv_url !== undefined && p.tv_url !== null) {
+    if (typeof p.tv_url !== 'string' || p.tv_url.trim() === '') {
+      throw new Error('tv_url bila diisi harus berupa string')
+    }
+    if (!p.tv_url.includes('{tmdb_id}')) {
+      throw new Error('tv_url harus mengandung placeholder {tmdb_id}')
+    }
+    assertValidUrl(p.tv_url, 'tv_url')
+  }
+
   if (p.media_type !== undefined && p.media_type !== null &&
       p.media_type !== 'movie' && p.media_type !== 'tv') {
     throw new Error('media_type harus null, "movie", atau "tv"')
   }
+
+  // media_type null/tv/absent = mencakup TV → tv_url wajib.
+  const coversTv = p.media_type === undefined || p.media_type === null || p.media_type === 'tv'
+  if (coversTv && (p.tv_url === undefined || p.tv_url === null)) {
+    throw new Error('tv_url wajib diisi bila media_type bukan "movie" (null atau "tv")')
+  }
+
   if (p.enabled !== undefined && typeof p.enabled !== 'boolean') {
     throw new Error('enabled harus boolean')
   }
@@ -115,28 +156,9 @@ export function updateConfig(patch) {
   }
   const next = {
     ...raw,
-    // providers: pakai seed dari legacy bila config belum punya `providers`
-    providers: Array.isArray(raw.providers) ? raw.providers : seedProviders(raw),
-  }
-
-  if (patch.providers !== undefined) {
-    next.providers = normalizeProviders(patch.providers)
-  }
-
-  if ('viduki_enabled' in patch) next.viduki_enabled = Boolean(patch.viduki_enabled)
-
-  if ('viduki_default_api' in patch) {
-    if (!VIDUKI_APIS.includes(patch.viduki_default_api)) {
-      throw new Error('viduki_default_api harus salah satu dari 1, 2, 3, 4')
-    }
-    next.viduki_default_api = patch.viduki_default_api
-  }
-
-  if ('viduki_color' in patch) {
-    if (typeof patch.viduki_color !== 'string' || !COLOR_RE.test(patch.viduki_color)) {
-      throw new Error('viduki_color harus berformat #RRGGBB')
-    }
-    next.viduki_color = patch.viduki_color
+    providers: patch.providers !== undefined
+      ? normalizeProviders(patch.providers)
+      : (Array.isArray(raw.providers) ? migrateProviders(raw) : []),
   }
 
   writeFileSync(CONFIG_PATH, JSON.stringify(next, null, 2) + '\n', 'utf8')

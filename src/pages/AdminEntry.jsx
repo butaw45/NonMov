@@ -248,7 +248,7 @@ export default function AdminEntry() {
               </select>
             </label>
 
-            {/* Selalu self — tanam langsung tanpa cabang viduki */}
+            {/* Selalu self — tanam langsung */}
             <label>
               Video URL
               <input

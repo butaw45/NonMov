@@ -2,41 +2,48 @@
 // Registri & resolusi penyedia tontonan (Issue #13 + #19: Provider Registry)
 // Kontrak publik dikonsumsi Watch.jsx, AdminEntry.jsx, AdminSettings.jsx.
 // Plain functions, tanpa framework. Shape provider:
-//   self:   { type:'self',   label?, video_url?, video_type? }
-//   viduki: { type:'viduki', label?, viduki_api?, viduki_color? }
+//   self:  { type:'self',   label?, video_url?, video_type? }
+//   embed: { type:'embed',  label?, movie_url?, tv_url?, media_type?, enabled? }
+//   Template embed memakai placeholder {tmdb_id}, {season}, {episode}.
 // ------------------------------------------------------------------
 
-export const PROVIDER_TYPES = {
-  viduki: { label: 'viduki.net', fields: ['viduki_api', 'viduki_color'], defaultApi: 2 },
-}
+export const PROVIDER_LABELS = { self: 'Self-hosted', embed: 'embed' }
 
-export const PROVIDER_LABELS = { self: 'Self-hosted', viduki: 'viduki.net' }
+// Bangun URL akhir dari template provider embed.
+// Kotak placeholder kosong diisi string kosong (season/episode opsional).
+export function buildEmbedUrl(template, { tmdb_id, season, episode }) {
+  return template
+    .replaceAll('{tmdb_id}', String(tmdb_id ?? ''))
+    .replaceAll('{season}', String(season ?? ''))
+    .replaceAll('{episode}', String(episode ?? ''))
+}
 
 // Normalisasi satu provider: isi label default dari type,
 // hanya bawa field type-specific yang dikenal (abaikan lainnya).
 export function normalizeProvider(p) {
   if (!p || typeof p !== 'object') return null
   const type = p.type
-  if (type !== 'self' && type !== 'viduki') return null
+  if (type !== 'self' && type !== 'embed') return null
 
   const out = { type, label: p.label || PROVIDER_LABELS[type] }
 
   if (type === 'self') {
     if (p.video_url != null) out.video_url = p.video_url
     if (p.video_type != null) out.video_type = p.video_type
-  } else if (type === 'viduki') {
-    // viduki per-entry tak dipakai lagi (lihat resolve); tetap bisa
-    // di-normalize utk kontrak lama saja.
-    if (p.viduki_api != null) out.viduki_api = p.viduki_api
-    if (p.viduki_color != null) out.viduki_color = p.viduki_color
+  } else if (type === 'embed') {
+    // Pertahankan template URL + media_type + id (global pool).
+    if (p.id != null) out.id = p.id
+    if (p.movie_url != null) out.movie_url = p.movie_url
+    if (p.tv_url != null) out.tv_url = p.tv_url
+    if (p.media_type != null) out.media_type = p.media_type
+    if (p.enabled != null) out.enabled = p.enabled
   }
 
   return out
 }
 
 // entry.providers → Provider[] ternormalisasi, FILTER self-only
-// (viduki di-drop, karena override per-judul kini khusus self),
-// null jika kosong/absent.
+// (override per-judul kini khusus self), null jika kosong/absent.
 export function entryProviders(entry) {
   const list = entry?.providers
   if (!Array.isArray(list) || list.length === 0) return null
@@ -47,7 +54,7 @@ export function entryProviders(entry) {
 }
 
 // Flat fields legacy → Provider[] (backward compat).
-// HANYA legacy flat self; legacy viduki DIABAIKAN → [].
+// HANYA legacy flat self.
 export function flatToProviders(entry) {
   if (!entry) return []
   const vp = entry.video_provider
