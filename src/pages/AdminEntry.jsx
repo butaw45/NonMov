@@ -21,19 +21,15 @@ export default function AdminEntry() {
   const [status, setStatus] = useState('draft')
   const [title, setTitle] = useState('')
 
-  // Penyedia tontonan (array Provider: self | viduki)
+  // Penyedia tontonan (array Provider: self hanya — override per judul)
   const [providers, setProviders] = useState([])
   // State sementara untuk form "Tambah Provider"
   const [addOpen, setAddOpen] = useState(false)
   const [addType, setAddType] = useState('self')
   const [addUrl, setAddUrl] = useState('')
   const [addVideoType, setAddVideoType] = useState('hls')
-  const [addVidukiApi, setAddVidukiApi] = useState(2)
-  const [addVidukiType, setAddVidukiType] = useState('movie')
-  const [addVidukiColor, setAddVidukiColor] = useState('#ef4444')
   const [addLabel, setAddLabel] = useState('')
   const [addError, setAddError] = useState('')
-  const [showPreview, setShowPreview] = useState(false)
 
   const [error, setError] = useState('')
   const [saving, setSaving] = useState(false)
@@ -49,8 +45,9 @@ export default function AdminEntry() {
         setManualId(String(e.tmdb_id))
         setManualType(e.type)
         setStatus(e.status || 'draft')
-        // Penyedia: prefer providers[] tersimpan, fallback ke flat legacy
-        if (e.providers?.length) setProviders(e.providers.map(normalizeProvider))
+        // Penyedia: prefer providers[] tersimpan (self only), fallback ke flat legacy
+        if (e.providers?.length)
+          setProviders(e.providers.map(normalizeProvider).filter((p) => p && p.type === 'self'))
         else setProviders(flatToProviders(e))
       })
       .catch((err) => {
@@ -91,35 +88,19 @@ export default function AdminEntry() {
     e.preventDefault()
     setAddError('')
     // Validasi ringan client-side
-    if (addType === 'self') {
-      if (!addUrl.trim()) {
-        setAddError('Isi Video URL untuk provider self-hosted.')
-        return
-      }
-    } else {
-      const api = Number(addVidukiApi)
-      if (!(api >= 1 && api <= 4)) {
-        setAddError('API viduki harus antara 1–4.')
-        return
-      }
+    if (!addUrl.trim()) {
+      setAddError('Isi Video URL untuk provider self-hosted.')
+      return
     }
-    const base = { type: addType, label: addLabel.trim() || undefined }
-    const fields =
-      addType === 'self'
-        ? {
-            video_url: addUrl.trim(),
-            video_type: addVideoType,
-          }
-        : { viduki_api: Number(addVidukiApi), viduki_type: addVidukiType, viduki_color: addVidukiColor }
-    setProviders([...providers, normalizeProvider({ ...base, ...fields })])
+    setProviders([
+      ...providers,
+      normalizeProvider({ type: 'self', label: addLabel.trim() || undefined, video_url: addUrl.trim(), video_type: addVideoType }),
+    ])
     // reset state add
     setAddOpen(false)
     setAddType('self')
     setAddUrl('')
     setAddVideoType('hls')
-    setAddVidukiApi(2)
-    setAddVidukiType('movie')
-    setAddVidukiColor('#ef4444')
     setAddLabel('')
     setAddError('')
   }
@@ -159,8 +140,6 @@ export default function AdminEntry() {
       setSaving(false)
     }
   }
-
-  const vidukiProvider = providers.find((p) => p.type === 'viduki')
 
   if (loadingEntry) return <div className="admin-page"><p className="hint">Memuat entri...</p></div>
 
@@ -246,11 +225,11 @@ export default function AdminEntry() {
         )}
 
         {/* Provider Selection */}
-        <h3>Penyedia Tontonan</h3>
+        <h3>Video self-hosted (override judul ini)</h3>
         {providers.length === 0 && <p className="hint">Belum ada provider. Tambahkan di bawah.</p>}
         {providers.map((p, i) => (
           <div className="provider-item" key={i}>
-            <span><strong>{p.label}</strong> · <em>{p.type === 'self' ? 'Self-hosted' : 'viduki.net'}</em></span>
+            <span><strong>{p.label}</strong> · <em>Self-hosted</em></span>
             <button type="button" className="btn btn-ghost btn-sm" onClick={() => setProviders(providers.filter((_, j) => j !== i))}>Hapus</button>
           </div>
         ))}
@@ -266,66 +245,34 @@ export default function AdminEntry() {
               Tipe Provider
               <select className="field" value={addType} onChange={(e) => setAddType(e.target.value)}>
                 <option value="self">Self-hosted (ArtPlayer)</option>
-                <option value="viduki">viduki.net (Embed)</option>
               </select>
             </label>
 
-            {addType === 'self' ? (
-              <>
-                <label>
-                  Video URL
-                  <input
-                    className="field"
-                    type="url"
-                    placeholder="https://.../playlist.m3u8"
-                    value={addUrl}
-                    onChange={(e) => setAddUrl(e.target.value)}
-                  />
-                </label>
-                <label>
-                  Tipe Video
-                  <select className="field" value={addVideoType} onChange={(e) => setAddVideoType(e.target.value)}>
-                    <option value="hls">HLS (.m3u8)</option>
-                    <option value="dash">DASH (.mpd)</option>
-                    <option value="embed">Embed (iframe)</option>
-                  </select>
-                </label>
-              </>
-            ) : (
-              <>
-                <label>
-                  API viduki
-                  <select className="field" value={addVidukiApi} onChange={(e) => setAddVidukiApi(Number(e.target.value))}>
-                    <option value="1">API 1 — Multi Server</option>
-                    <option value="2">API 2 — Multi Language</option>
-                    <option value="3">API 3 — Multi Embeds</option>
-                    <option value="4">API 4 — Premium Embeds</option>
-                  </select>
-                </label>
-                <label>
-                  Tipe viduki
-                  <select className="field" value={addVidukiType} onChange={(e) => setAddVidukiType(e.target.value)}>
-                    <option value="movie">Movie</option>
-                    <option value="tv">TV Series</option>
-                  </select>
-                </label>
-                <label>
-                  Warna Player (opsional)
-                  <input
-                    className="field"
-                    type="color"
-                    value={addVidukiColor}
-                    onChange={(e) => setAddVidukiColor(e.target.value)}
-                  />
-                </label>
-              </>
-            )}
+            {/* Selalu self — tanam langsung */}
+            <label>
+              Video URL
+              <input
+                className="field"
+                type="url"
+                placeholder="https://.../playlist.m3u8"
+                value={addUrl}
+                onChange={(e) => setAddUrl(e.target.value)}
+              />
+            </label>
+            <label>
+              Tipe Video
+              <select className="field" value={addVideoType} onChange={(e) => setAddVideoType(e.target.value)}>
+                <option value="hls">HLS (.m3u8)</option>
+                <option value="dash">DASH (.mpd)</option>
+                <option value="embed">Embed (iframe)</option>
+              </select>
+            </label>
 
             <label>
               Label (opsional)
               <input
                 className="field"
-                placeholder={addType === 'self' ? 'Self-hosted' : 'viduki.net'}
+                placeholder="Self-hosted"
                 value={addLabel}
                 onChange={(e) => setAddLabel(e.target.value)}
               />
@@ -338,41 +285,6 @@ export default function AdminEntry() {
               <button type="button" className="btn btn-ghost btn-sm" onClick={() => { setAddOpen(false); setAddError('') }}>Batal</button>
             </div>
           </form>
-        )}
-
-        {/* Preview viduki — provider viduki pertama */}
-        {vidukiProvider && manualId && (
-          <>
-            <div className="form-row">
-              <button
-                type="button"
-                className="btn btn-ghost btn-sm"
-                onClick={() => setShowPreview(!showPreview)}
-              >
-                {showPreview ? 'Sembunyikan' : 'Tampilkan'} Preview viduki
-              </button>
-            </div>
-            {showPreview && (
-              <div className="preview-box">
-                <p className="hint">
-                  Preview: https://viduki.net/{vidukiProvider.viduki_api ?? 2}/{vidukiProvider.viduki_type ?? manualType}/{manualId}
-                  {(vidukiProvider.viduki_type ?? manualType) === 'tv' && '/1/1'}
-                  ?color={encodeURIComponent(vidukiProvider.viduki_color ?? '#ef4444')}
-                </p>
-                <iframe
-                  src={`https://viduki.net/${vidukiProvider.viduki_api ?? 2}/${vidukiProvider.viduki_type ?? manualType}/${manualId}${(vidukiProvider.viduki_type ?? manualType) === 'tv' ? '/1/1' : ''}?color=${encodeURIComponent(vidukiProvider.viduki_color ?? '#ef4444')}`}
-                  style={{
-                    width: '100%',
-                    aspectRatio: '16/9',
-                    border: 0,
-                    backgroundColor: '#000',
-                  }}
-                  sandbox="allow-scripts allow-same-origin allow-forms allow-popups"
-                  title="Preview viduki"
-                />
-              </div>
-            )}
-          </>
         )}
 
         <label>

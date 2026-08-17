@@ -1,0 +1,167 @@
+<!doctype html>
+<html lang="id">
+<head>
+<meta charset="utf-8" />
+<title>Preview — Provider Registry Template (Issue #20 draft)</title>
+<style>
+  :root{
+    --bg:#0f0f0f; --panel:#161616; --line:#2a2a2a; --txt:#f3ecdd; --mut:#a8a196;
+    --acc:#e50914; --field:#1d1d1d; --ok:#0bb775;
+  }
+  *{box-sizing:border-box}
+  body{margin:0;background:var(--bg);color:var(--txt);font:15px/1.5 Manrope,system-ui,sans-serif;padding:32px;max-width:860px}
+  h1{font-size:22px;margin:0 0 4px}
+  h3{font-size:16px;margin:22px 0 6px}
+  h4{font-size:14px;margin:20px 0 8px;color:var(--mut)}
+  .hint{color:var(--mut);font-size:13px;margin:0 0 16px}
+  .card{background:var(--panel);border:1px solid var(--line);border-radius:12px;padding:20px;margin-top:14px}
+  .row{display:flex;gap:10px;align-items:center;flex-wrap:wrap}
+  .provider-item{display:flex;align-items:center;gap:14px;padding:12px 14px;background:#1b1b1b;border:1px solid var(--line);border-radius:10px;margin:8px 0}
+  .provider-item .meta{flex:1;min-width:0}
+  .provider-item strong{font-size:14px}
+  .provider-item .u{display:block;color:var(--mut);font-size:12px;word-break:break-all;font-family:ui-monospace,monospace}
+  .badge{display:inline-block;background:#262626;border:1px solid var(--line);color:var(--mut);font-size:11px;padding:1px 8px;border-radius:999px;margin-left:8px;vertical-align:middle}
+  .badge.tmpl{background:#1a2438;border-color:#2b3a5e;color:#9db6ff}
+  label{display:block;font-size:13px;color:var(--mut);margin:10px 0 0}
+  .field{display:block;width:100%;margin-top:5px;background:var(--field);border:1px solid var(--line);color:var(--txt);border-radius:8px;padding:9px 11px;font-size:14px;font-family:inherit}
+  input[type=color].field{padding:3px;height:38px;cursor:pointer}
+  select.field{cursor:pointer}
+  .grid2{display:grid;grid-template-columns:1fr 1fr;gap:0 14px}
+  .btn{background:#2a2a2a;border:1px solid var(--line);color:var(--txt);border-radius:8px;padding:9px 16px;font-size:14px;cursor:pointer;font-family:inherit}
+  .btn:hover{background:#333}
+  .btn-primary{background:var(--acc);border-color:var(--acc)}
+  .btn-primary:hover{background:#f40612}
+  .btn-ghost{background:transparent}
+  .btn-sm{padding:6px 12px;font-size:13px}
+  .toggle{display:inline-flex;align-items:center;gap:6px;font-size:13px;color:var(--txt);white-space:nowrap}
+  .toggle input{accent-color:var(--ok)}
+  .actions{display:flex;justify-content:flex-end;gap:10px;margin-top:20px}
+  .legend{display:flex;gap:18px;flex-wrap:wrap;margin:14px 0 0;padding:12px 14px;background:#141821;border:1px solid #243050;border-radius:10px;font-size:12px;color:#9db6ff}
+  .legend code{background:#0e1626;padding:1px 6px;border-radius:5px}
+  .seg{display:inline-flex;border:1px solid var(--line);border-radius:8px;overflow:hidden;margin-top:5px}
+  .seg button{background:#1d1d1d;border:0;color:var(--mut);padding:8px 14px;font-size:13px;cursor:pointer;font-family:inherit}
+  .seg button.on{background:var(--acc);color:#fff}
+  .tag{font-size:11px;color:var(--mut)}
+  hr{border:0;border-top:1px solid var(--line);margin:26px 0}
+</style>
+</head>
+<body>
+
+<h1>Pengaturan Provider <span class="badge">Draft v2 — template</span></h1>
+<p class="hint">Preview visual: pool global kini pakai <b>URL template</b>. Semua provider (viduki, videasy, dll) seragam — tipe apapun bisa ditambah.</p>
+
+<div class="legend">
+  Placeholder yang didukung:
+  <span><code>{tmdb_id}</code> id TMDB judul</span>
+  <span><code>{season}</code> nomor season (TV)</span>
+  <span><code>{episode}</code> nomor episode (TV)</span>
+</div>
+
+<div class="card">
+  <h3>Provider Global</h3>
+  <p class="hint">Pool penyedia untuk semua judul (kecuali ada override per judul). Contoh <b>config.json</b> hasil dari form ini di bawah.</p>
+
+  <!-- contoh provider hasil unifikasi -->
+  <div class="provider-item">
+    <div class="meta">
+      <strong>viduki API 2</strong> <span class="badge tmpl">template</span><span class="badge">Movie + TV</span>
+      <span class="u">https://www.viduki.net/2/movie/{tmdb_id}</span>
+      <span class="u">https://www.viduki.net/2/tv/{tmdb_id}/{season}/{episode}</span>
+    </div>
+    <label class="toggle"><input type="checkbox" checked> Aktif</label>
+    <button class="btn btn-ghost btn-sm">Hapus</button>
+  </div>
+
+  <div class="provider-item">
+    <div class="meta">
+      <strong>videasy</strong> <span class="badge tmpl">template</span><span class="badge">Movie + TV</span>
+      <span class="u">https://player.videasy.net/movie/{tmdb_id}</span>
+      <span class="u">https://player.videasy.net/tv/{tmdb_id}/{season}/{episode}</span>
+    </div>
+    <label class="toggle"><input type="checkbox" checked> Aktif</label>
+    <button class="btn btn-ghost btn-sm">Hapus</button>
+  </div>
+
+  <div class="provider-item">
+    <div class="meta">
+      <strong>2embed</strong> <span class="badge tmpl">template</span><span class="badge">Movie</span>
+      <span class="u">https://www.2embed.cc/embed/{tmdb_id}</span>
+    </div>
+    <label class="toggle"><input type="checkbox"> Aktif</label>
+    <button class="btn btn-ghost btn-sm">Hapus</button>
+  </div>
+
+  <hr>
+
+  <h4>Tambah Provider (template)</h4>
+  <div class="grid2">
+    <div>
+      <label>Label
+        <input class="field" placeholder="videasy">
+      </label>
+    </div>
+    <div>
+      <label>Media Type
+        <select class="field">
+          <option value="">Movie + TV (semua)</option>
+          <option value="movie">Movie</option>
+          <option value="tv">TV</option>
+        </select>
+      </label>
+    </div>
+  </div>
+
+  <label>URL Template — Movie
+    <input class="field" placeholder="https://player.videasy.net/movie/{tmdb_id}">
+  </label>
+  <label>URL Template — TV <span class="tag">(opsional bila Media Type = Movie)</span>
+    <input class="field" placeholder="https://player.videasy.net/tv/{tmdb_id}/{season}/{episode}">
+  </label>
+
+  <label>Aktif saat dibuat</label>
+  <div class="seg">
+    <button class="on">Aktif</button><button>Nonaktif</button>
+  </div>
+
+  <div class="actions">
+    <button class="btn" type="button">Tambah Provider</button>
+    <button class="btn btn-primary" type="submit">Simpan Pengaturan</button>
+  </div>
+</div>
+
+<hr>
+<h3>Contoh <code>config.json</code> (hasil dari form di atas)</h3>
+<pre style="background:#101418;border:1px solid #223;padding:16px;border-radius:10px;overflow:auto;font-size:12.5px;line-height:1.5">{
+  "providers": [
+    {
+      "id": "p_e5f6a7b8",
+      "type": "embed",
+      "label": "viduki API 2",
+      "movie_url": "https://www.viduki.net/2/movie/{tmdb_id}",
+      "tv_url": "https://www.viduki.net/2/tv/{tmdb_id}/{season}/{episode}",
+      "media_type": null,
+      "enabled": true
+    },
+    {
+      "id": "p_a1b2c3d4",
+      "type": "embed",
+      "label": "videasy",
+      "movie_url": "https://player.videasy.net/movie/{tmdb_id}",
+      "tv_url": "https://player.videasy.net/tv/{tmdb_id}/{season}/{episode}",
+      "media_type": null,
+      "enabled": true
+    },
+    {
+      "id": "p_c9d0e1f2",
+      "type": "embed",
+      "label": "2embed",
+      "movie_url": "https://www.2embed.cc/embed/{tmdb_id}",
+      "tv_url": null,
+      "media_type": "movie",
+      "enabled": false
+    }
+  ]
+}</pre>
+
+</body>
+</html>

@@ -6,9 +6,8 @@ import { tmdb, img, pickProviders, catalogLookup, fetchConfig } from '../lib/tmd
 import { useTitle } from '../lib/hooks'
 import { runtimeLabel } from '../lib/utils'
 import { restorePosition, upsertProgress, removeHistory } from '../lib/history'
-import { resolveProviders } from '../lib/providers'
+import { resolveProviders, buildEmbedUrl } from '../lib/providers'
 import { IconArrowL, IconExt } from '../components/Icons'
-import IframePlayer from '../components/IframePlayer'
 
 // Halaman player (PRD P0 #4). URL stream HLS/DASH nantinya datang dari
 // katalog internal/backend; sekarang bisa dicoba lewat parameter ?src=.
@@ -123,13 +122,13 @@ export default function Watch() {
   // dievaluasi saat render, jadi `src` harus sudah diinisialisasi (hindari TDZ).
   const providers = resolveProviders(catalogEntry, config, kind)
   const active = providers[activeIdx] ?? providers[0]
-  const isVidukiActive = active?.type === 'viduki'
   const src = srcQuery || (active?.type === 'self' ? active.video_url : undefined)
-  const showViduki = isVidukiActive && !srcQuery
-  const hasStream = src || isVidukiActive
-  const vidukiTmdbId = active?.type === 'viduki' ? (catalogEntry?.tmdb_id ?? Number(id)) : undefined
+  const tmdbId = catalogEntry?.tmdb_id ?? Number(id)
+  const hasStream = !!src || active?.type === 'embed'
 
   useEffect(() => {
+    // Self embed dirender sebagai iframe, bukan ArtPlayer
+    if (active?.type === 'self' && active?.video_type === 'embed') return
     if (!src || !videoRef.current) return
     const isHls = /\.m3u8($|\?)/i.test(src)
     const art = new Artplayer({
@@ -229,16 +228,22 @@ export default function Watch() {
               </select>
             </div>
           )}
-          {showViduki ? (
+          {active?.type === 'embed' ? (
             <div className="player-shell">
-              <IframePlayer
-                api={active?.viduki_api || config?.viduki_default_api || 2}
-                tmdbId={vidukiTmdbId}
-                type={active?.viduki_type || kind}
-                season={season}
-                episode={episode}
-                color={active?.viduki_color || config?.viduki_color || '#ef4444'}
+              <iframe
+                className="player-box"
+                src={buildEmbedUrl(kind === 'tv' ? active.tv_url : active.movie_url, {
+                  tmdb_id: tmdbId,
+                  season,
+                  episode,
+                })}
+                allowFullScreen
+                title={active.label}
               />
+            </div>
+          ) : active?.video_type === 'embed' ? (
+            <div className="player-shell">
+              <iframe className="player-box" src={active.video_url} allowFullScreen title={active.label || 'embed'} />
             </div>
           ) : (
             <div className="player-shell">

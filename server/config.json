@@ -1,5 +1,13 @@
 {
-  "viduki_enabled": true,
-  "viduki_default_api": 2,
-  "viduki_color": "#ef4444"
+  "providers": [
+    {
+      "type": "embed",
+      "id": "p_6i9jrj16",
+      "label": "viduki.net",
+      "movie_url": "https://www.viduki.net/2/movie/{tmdb_id}",
+      "tv_url": "https://www.viduki.net/2/tv/{tmdb_id}/{season}/{episode}",
+      "media_type": null,
+      "enabled": true
+    }
+  ]
 }
