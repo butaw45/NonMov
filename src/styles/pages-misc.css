@@ -145,3 +145,154 @@
   .skel { animation: none; }
   html { scroll-behavior: auto; }
 }
+
+/* ============================================================
+   Admin panel (Issue #6)
+   ============================================================ */
+.admin-shell { min-height: 100vh; }
+.admin-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  padding: 14px clamp(16px, 4vw, 40px);
+  border-bottom: 1px solid var(--line);
+  background: var(--bg-deep);
+  position: sticky;
+  top: 0;
+  z-index: 50;
+}
+.admin-brand {
+  font-family: var(--font-display);
+  font-size: 1.15rem;
+  font-weight: 700;
+  color: var(--amber);
+  text-decoration: none;
+}
+.admin-header nav { display: flex; gap: 10px; }
+
+.admin-page {
+  width: min(880px, 100% - 32px);
+  margin: 26px auto 60px;
+}
+.admin-page h1 {
+  font-family: var(--font-display);
+  font-size: 1.5rem;
+  margin-bottom: 18px;
+}
+.admin-page h2 { font-size: 1rem; margin-bottom: 12px; }
+
+.admin-card {
+  background: var(--panel);
+  border: 1px solid var(--line);
+  border-radius: var(--radius-lg);
+  padding: 20px;
+  margin-bottom: 20px;
+}
+.admin-card label { display: block; margin-bottom: 14px; font-size: 13.5px; font-weight: 600; color: var(--ink-dim); }
+.admin-card .field { display: block; width: 100%; margin-top: 6px; }
+
+.admin-login {
+  min-height: 100vh;
+  display: grid;
+  place-items: center;
+  padding: 20px;
+}
+.admin-login .admin-card { width: min(380px, 100%); margin: 0; }
+.admin-login h1 { font-family: var(--font-display); font-size: 1.4rem; margin-bottom: 4px; }
+.admin-login .btn { width: 100%; justify-content: center; margin-top: 4px; }
+
+.admin-toolbar {
+  display: flex;
+  gap: 12px;
+  align-items: center;
+  flex-wrap: wrap;
+  margin-bottom: 18px;
+}
+
+.entry-list { display: grid; gap: 12px; }
+.entry-card {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 14px;
+  background: var(--panel);
+  border: 1px solid var(--line);
+  border-radius: var(--radius-lg);
+  padding: 14px 18px;
+}
+.entry-info h3 { font-size: 1rem; margin-bottom: 4px; }
+.entry-info p { font-size: 13px; color: var(--muted); }
+.entry-meta { margin-top: 2px; }
+.entry-actions { display: flex; gap: 8px; flex: none; }
+
+.badge {
+  display: inline-block;
+  padding: 2px 9px;
+  border-radius: 99px;
+  font-size: 11.5px;
+  font-weight: 700;
+  background: var(--panel-2);
+  border: 1px solid var(--line-strong);
+  color: var(--ink-dim);
+}
+.badge-published { background: rgba(74, 140, 92, 0.18); border-color: rgba(74, 140, 92, 0.5); color: #9fd6ae; }
+.badge-draft { background: rgba(233, 180, 88, 0.12); border-color: rgba(233, 180, 88, 0.4); color: var(--amber-hi); }
+
+.btn-danger:hover { border-color: var(--velvet); color: #ff9b8a; }
+
+.error-box {
+  background: rgba(192, 64, 47, 0.14);
+  border: 1px solid rgba(192, 64, 47, 0.5);
+  color: #ff9b8a;
+  border-radius: var(--radius);
+  padding: 10px 14px;
+  font-size: 13.5px;
+  margin-bottom: 14px;
+}
+.hint { color: var(--muted); font-size: 13.5px; }
+
+.search-row { display: flex; gap: 10px; flex-wrap: wrap; }
+.search-row .field { flex: 1; min-width: 200px; margin-top: 0; }
+.search-row select.field { flex: none; }
+
+.match-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(240px, 1fr)); gap: 12px; margin-top: 14px; }
+.match-card {
+  display: flex;
+  gap: 10px;
+  align-items: center;
+  background: var(--panel-2);
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  padding: 10px;
+}
+.match-card img { width: 46px; border-radius: 4px; flex: none; }
+.match-noposter {
+  width: 46px; height: 66px; flex: none;
+  display: grid; place-items: center;
+  background: var(--panel); border-radius: 4px;
+  color: var(--faint); font-size: 20px;
+}
+.match-info { flex: 1; min-width: 0; font-size: 13px; }
+.match-info strong { display: block; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.match-info .hint { font-size: 12px; }
+
+.picked {
+  display: flex;
+  gap: 12px;
+  align-items: center;
+  background: var(--panel-2);
+  border: 1px solid var(--amber);
+  border-radius: var(--radius);
+  padding: 12px;
+  margin-top: 14px;
+}
+.picked img { width: 54px; border-radius: 4px; flex: none; }
+.picked > div { flex: 1; min-width: 0; }
+
+.form-actions { display: flex; gap: 10px; margin-top: 6px; }
+
+@media (max-width: 560px) {
+  .entry-card { flex-direction: column; align-items: stretch; }
+  .entry-actions { justify-content: flex-end; }
+}

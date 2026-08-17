@@ -8,8 +8,39 @@
 const API_KEY = (import.meta.env.VITE_TMDB_API_KEY || '').trim()
 export const HAS_KEY = API_KEY.length > 0
 
-const BASE = 'https://api.themoviedb.org/3'
+// Jika VITE_API_BASE diset (produksi/deploy bersama backend), semua request
+// TMDB lewat proxy backend — API key tidak terekspos di browser.
+// Jika kosong, fallback ke TMDB langsung (butuh VITE_TMDB_API_KEY).
+const BASE = (import.meta.env.VITE_API_BASE || 'https://api.themoviedb.org/3').replace(/\/+$/, '')
 const IMG = 'https://image.tmdb.org/t/p'
+
+// Helper untuk lookup catalog custom dari backend. Mengembalikan null jika
+// tidak ada entri atau backend tidak jalan (frontend tetap berfungsi).
+export async function catalogLookup(tmdbId, type) {
+  try {
+    const res = await fetch(`/api/catalog/lookup?tmdb_id=${tmdbId}&type=${type}`, {
+      headers: { Accept: 'application/json' },
+    })
+    if (!res.ok) return null
+    return await res.json()
+  } catch {
+    return null
+  }
+}
+
+// Ambil konfigurasi global (viduki) dari backend. Mengembalikan null jika
+// backend tidak jalan (frontend tetap berfungsi).
+export async function fetchConfig() {
+  try {
+    const res = await fetch('/api/config', {
+      headers: { Accept: 'application/json' },
+    })
+    if (!res.ok) return null
+    return await res.json()
+  } catch {
+    return null
+  }
+}
 
 export function img(path, size = 'w342') {
   if (!path) return null
@@ -46,7 +77,8 @@ function cacheWrite(key, data) {
 async function request(path, params = {}) {
   // Teks TMDB sengaja diambil en-US: sumber utamanya memang Inggris dan
   // terjemahan id-ID sering tidak lengkap (mis. sinopsis episode kosong).
-  const merged = { api_key: API_KEY, language: 'en-US', include_adult: 'false', ...params }
+  const merged = { language: 'en-US', include_adult: 'false', ...params }
+  if (API_KEY) merged.api_key = API_KEY
   const search = new URLSearchParams()
   for (const [k, v] of Object.entries(merged)) {
     if (v !== undefined && v !== null && v !== '') search.set(k, String(v))

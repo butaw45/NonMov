@@ -3,6 +3,7 @@ import { Link, useParams } from 'react-router-dom'
 import { tmdb, img, pickProviders } from '../lib/tmdb'
 import { useTitle } from '../lib/hooks'
 import { useWatchlist, toggleWatch } from '../lib/watchlist'
+import { useHistory } from '../lib/history'
 import Row from '../components/Row'
 import { DetailSkeleton } from '../components/Skeletons'
 import { IconStar, IconPlay, IconPlus, IconCheck, IconExt, IconX, IconAlert } from '../components/Icons'
@@ -20,7 +21,8 @@ export default function Detail() {
   const [epsLoading, setEpsLoading] = useState(false)
   // Koleksi/saga untuk film: undefined = belum dicek, null = tidak punya koleksi
   const [coll, setColl] = useState(undefined)
-  const list = useWatchlist()
+const list = useWatchlist()
+const history = useHistory()
 
   useTitle(detail ? detail.title || detail.name : null)
 
@@ -164,10 +166,25 @@ export default function Detail() {
             </p>
 
             <div className="detail-actions">
+              {(() => {
+                let watchHref = `/tonton/${kind}/${id}`
+                if (kind === 'tv') {
+                  const h = history.find((e) => e.type === 'tv' && e.id === Number(id))
+                  if (h && h.season != null && h.episode != null) {
+                    watchHref = `/tonton/tv/${id}?season=${h.season}&episode=${h.episode}`
+                  }
+                }
+                return (
+                  <Link className="btn btn-primary" to={watchHref}>
+                    <IconPlay size={15} />
+                    Tonton Sekarang
+                  </Link>
+                )
+              })()}
               {trailer && (
-                <button className="btn btn-primary" onClick={() => setTrailerOpen(true)}>
+                <button className="btn btn-ghost" onClick={() => setTrailerOpen(true)}>
                   <IconPlay size={15} />
-                  Tonton Trailer
+                  Trailer
                 </button>
               )}
               <button
@@ -272,21 +289,30 @@ export default function Detail() {
                   <p className="muted">Daftar episode untuk season ini belum tersedia.</p>
                 )}
                 {eps.map((ep) => (
-                  <article className="ep" key={ep.id}>
-                    <div className="still">
-                      {ep.still_path && (
-                        <img loading="lazy" src={img(ep.still_path, 'w300')} alt="" />
-                      )}
-                      <span className="epnum">EP {String(ep.episode_number).padStart(2, '0')}</span>
-                    </div>
-                    <div>
-                      <div className="ep-name">
-                        {ep.name || `Episode ${ep.episode_number}`}
-                        {ep.runtime > 0 && <span className="dur">{runtimeLabel(ep.runtime)}</span>}
+                  <Link
+                    className="ep-link"
+                    key={ep.id}
+                    to={`/tonton/tv/${id}?season=${season}&episode=${ep.episode_number}`}
+                  >
+                    <article className="ep">
+                      <div className="still">
+                        {ep.still_path && (
+                          <img loading="lazy" src={img(ep.still_path, 'w300')} alt="" />
+                        )}
+                        <span className="epnum">EP {String(ep.episode_number).padStart(2, '0')}</span>
                       </div>
-                      {ep.overview && <p className="ep-over">{ep.overview}</p>}
-                    </div>
-                  </article>
+                      <div>
+                        <div className="ep-name">
+                          {ep.name || `Episode ${ep.episode_number}`}
+                          {ep.runtime > 0 && <span className="dur">{runtimeLabel(ep.runtime)}</span>}
+                        </div>
+                        {ep.overview && <p className="ep-over">{ep.overview}</p>}
+                        <span className="btn btn-primary btn-sm ep-watch">
+                          <IconPlay size={13} /> Tonton EP {ep.episode_number}
+                        </span>
+                      </div>
+                    </article>
+                  </Link>
                 ))}
               </div>
             )}

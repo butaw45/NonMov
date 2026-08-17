@@ -2,9 +2,13 @@ import { useEffect, useRef, useState } from 'react'
 import { Link, useParams, useSearchParams } from 'react-router-dom'
 import Artplayer from 'artplayer'
 import Hls from 'hls.js'
-import { tmdb, pickProviders } from '../lib/tmdb'
+import { tmdb, img, pickProviders, catalogLookup, fetchConfig } from '../lib/tmdb'
 import { useTitle } from '../lib/hooks'
+import { runtimeLabel } from '../lib/utils'
+import { restorePosition, upsertProgress, removeHistory } from '../lib/history'
+import { resolveProviders } from '../lib/providers'
 import { IconArrowL, IconExt } from '../components/Icons'
+import IframePlayer from '../components/IframePlayer'
 
 // Halaman player (PRD P0 #4). URL stream HLS/DASH nantinya datang dari
 // katalog internal/backend; sekarang bisa dicoba lewat parameter ?src=.
@@ -12,12 +16,60 @@ export default function Watch() {
   const { type, id } = useParams()
   const kind = type === 'tv' ? 'tv' : 'movie'
   const [sp] = useSearchParams()
-  const src = sp.get('src')
+  const srcQuery = sp.get('src')
+  // URL stream final: prioritas ?src= (manual), lalu catalog backend (otomatis)
+  const [catalogEntry, setCatalogEntry] = useState(null)
+  const [config, setConfig] = useState(null)
+  const [resolving, setResolving] = useState(true)
+  const [activeIdx, setActiveIdx] = useState(0)
+  // Konteks episode untuk TV dari query (?season=&episode=) — dipakai resume & label
+  const season = kind === 'tv' ? Number(sp.get('season')) || 1 : null
+  const episode = kind === 'tv' ? Number(sp.get('episode')) || 1 : null
   const videoRef = useRef(null)
   const [detail, setDetail] = useState(null)
   const [provs, setProvs] = useState([])
+  // Daftar episode di halaman player (khusus TV)
+  const [watchSeason, setWatchSeason] = useState(season)
+  const [watchEps, setWatchEps] = useState(null)
+  const [watchEpsLoading, setWatchEpsLoading] = useState(false)
+  const [epsOpen, setEpsOpen] = useState(true)
+  // Detail terbaru, dibaca saat menyimpan progres (player effect hanya bergantung src)
+  const detailRef = useRef(null)
+  useEffect(() => {
+    detailRef.current = detail
+  }, [detail])
 
-  useTitle(detail ? `Nonton ${detail.title || detail.name}` : 'Nonton')
+  // Season/episode terbaru untuk pencatatan progres — bisa berganti tanpa remount player
+  const epRef = useRef({ season, episode })
+  useEffect(() => {
+    epRef.current = { season, episode }
+  }, [season, episode])
+
+  useTitle(
+    detail
+      ? `Nonton ${detail.title || detail.name}${kind === 'tv' ? ` — S${season}E${episode}` : ''}`
+      : 'Nonton'
+  )
+
+  // Muat catalog + konfigurasi global secara paralel jika tidak ada ?src= manual
+  useEffect(() => {
+    if (srcQuery) {
+      setResolving(false)
+      return
+    }
+    if (!id) return
+    let on = true
+    Promise.all([
+      catalogLookup(id, kind).catch(() => null),
+      fetchConfig().catch(() => null),
+    ]).then(([entry, cfg]) => {
+      if (!on) return
+      setCatalogEntry(entry)
+      setConfig(cfg)
+      setResolving(false)
+    })
+    return () => { on = false }
+  }, [srcQuery, id, kind])
 
   useEffect(() => {
     let on = true
@@ -29,6 +81,42 @@ export default function Watch() {
     return () => { on = false }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [kind, id])
+
+  // Jaga pilihan season tetap valid begitu detail termuat
+  useEffect(() => {
+    if (kind !== 'tv' || !detail) return
+    const list = detail.seasons || []
+    if (list.length > 0 && !list.some((s) => s.season_number === watchSeason)) {
+      const first = list.find((s) => s.season_number > 0) || list[0]
+      setWatchSeason(first.season_number)
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [detail])
+
+  // Muat daftar episode untuk season yang dipilih di halaman player
+  useEffect(() => {
+    if (kind !== 'tv' || !detail || watchSeason === null) return
+    let on = true
+    setWatchEpsLoading(true)
+    setWatchEps(null)
+    tmdb.season(id, watchSeason)
+      .then((d) => {
+        if (on) {
+          setWatchEps(d.episodes || [])
+          setWatchEpsLoading(false)
+        }
+      })
+      .catch(() => {
+        if (on) {
+          setWatchEps([])
+          setWatchEpsLoading(false)
+        }
+      })
+    return () => {
+      on = false
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [watchSeason, detail?.id])
 
   useEffect(() => {
     if (!src || !videoRef.current) return
@@ -59,18 +147,102 @@ export default function Watch() {
         },
       },
     })
-    return () => art.destroy(false)
+
+    // Lanjutkan Menonton: seek ke posisi tersimpan (untuk TV hanya bila season &
+    // episode cocok), rekam progres berkala, hapus entri saat selesai, flush saat keluar.
+    const start = restorePosition(kind, id, season, episode)
+    if (start > 0) {
+      art.on('ready', () => {
+        art.currentTime = start
+      })
+    }
+
+    let ended = false
+    let lastSave = 0
+    const save = () => {
+      const d = detailRef.current
+      if (!d || !art.duration) return
+      lastSave = Date.now()
+      upsertProgress({
+        type: kind,
+        id,
+        title: d.title || d.name,
+        poster_path: d.poster_path || null,
+        ...(kind === 'tv' ? epRef.current : {}),
+        pos: art.currentTime,
+        dur: art.duration,
+      })
+    }
+    // ArtPlayer mem-proxy event media dengan prefix "video:" (tidak ada "timeupdate"/"ended" polos)
+    art.on('video:timeupdate', () => {
+      if (Date.now() - lastSave >= 5000) save()
+    })
+    art.on('video:ended', () => {
+      ended = true
+      removeHistory(kind, id)
+    })
+
+    return () => {
+      if (!ended && art.currentTime > 0) save()
+      art.destroy(false)
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [src])
 
   const title = detail?.title || detail?.name
 
+  // URL pindah episode: pertahankan ?src dan query lain, ganti season & episode saja
+  const epUrl = (s, e) => {
+    const q = new URLSearchParams(sp)
+    q.set('season', String(s))
+    q.set('episode', String(e))
+    return `/tonton/tv/${id}?${q}`
+  }
+
+  // Player provider selector: resolve list dari entry/config, aktif dari dropdown
+  const providers = resolveProviders(catalogEntry, config, kind)
+  const active = providers[activeIdx] ?? providers[0]
+  const isVidukiActive = active?.type === 'viduki'
+  const src = srcQuery || (active?.type === 'self' ? active.video_url : undefined)
+  const showViduki = isVidukiActive && !srcQuery
+  const hasStream = src || isVidukiActive
+  const vidukiTmdbId = active?.type === 'viduki' ? (catalogEntry?.tmdb_id ?? Number(id)) : undefined
+
   return (
     <div className="watch-page">
-      {src ? (
+      {hasStream ? (
         <>
-          <div className="player-shell">
-            <div className="player-box" ref={videoRef} />
-          </div>
+          {providers.length > 1 && (
+            <div className="provider-select">
+              <label htmlFor="watch-provider">Provider</label>
+              <select
+                id="watch-provider"
+                className="field"
+                value={activeIdx}
+                onChange={(e) => setActiveIdx(Number(e.target.value))}
+              >
+                {providers.map((p, i) => (
+                  <option key={i} value={i}>{p.label}</option>
+                ))}
+              </select>
+            </div>
+          )}
+          {showViduki ? (
+            <div className="player-shell">
+              <IframePlayer
+                api={active?.viduki_api || config?.viduki_default_api || 2}
+                tmdbId={vidukiTmdbId}
+                type={active?.viduki_type || kind}
+                season={season}
+                episode={episode}
+                color={active?.viduki_color || config?.viduki_color || '#ef4444'}
+              />
+            </div>
+          ) : (
+            <div className="player-shell">
+              <div className="player-box" ref={videoRef} />
+            </div>
+          )}
           <div className="watch-meta">
             <Link className="back" to={`/judul/${kind}/${id}`}>
               <IconArrowL size={16} />
@@ -79,6 +251,10 @@ export default function Watch() {
             {title && <h1>{title}</h1>}
           </div>
         </>
+      ) : resolving ? (
+        <div className="no-stream">
+          <p className="hint">Memuat pemutar...</p>
+        </div>
       ) : (
         <div className="no-stream">
           <span className="frame" aria-hidden="true" />
@@ -110,6 +286,82 @@ export default function Watch() {
             </Link>
           </div>
         </div>
+      )}
+
+      {kind === 'tv' && detail && (
+        <section className="watch-eps">
+          <div className="row-head">
+            <span className="kicker">Daftar episode</span>
+            <h2>Season &amp; Episode</h2>
+            <button
+              type="button"
+              className="btn btn-ghost btn-sm"
+              onClick={() => setEpsOpen((o) => !o)}
+              aria-expanded={epsOpen}
+            >
+              {epsOpen ? 'Sembunyikan' : 'Tampilkan'}
+            </button>
+          </div>
+          {epsOpen && (
+            <>
+              <div className="season-pick">
+                <label htmlFor="watch-season" className="muted" style={{ fontWeight: 700 }}>
+                  Season
+                </label>
+                <select
+                  id="watch-season"
+                  className="field"
+                  value={watchSeason ?? ''}
+                  onChange={(e) => setWatchSeason(Number(e.target.value))}
+                >
+                  {(detail.seasons || []).map((s) => (
+                    <option key={s.season_number} value={s.season_number}>
+                      {s.name || `Season ${s.season_number}`} ({s.episode_count} episode)
+                    </option>
+                  ))}
+                </select>
+              </div>
+              {watchEpsLoading && <p className="muted">Memuat daftar episode...</p>}
+              {watchEps && watchEps.length === 0 && !watchEpsLoading && (
+                <p className="muted">Daftar episode untuk season ini belum tersedia.</p>
+              )}
+              {watchEps && watchEps.length > 0 && (
+                <div className="ep-list">
+                  {watchEps.map((ep) => {
+                    const active = watchSeason === season && ep.episode_number === episode
+                    return (
+                      <Link
+                        className="ep-link"
+                        key={ep.id}
+                        to={epUrl(watchSeason, ep.episode_number)}
+                      >
+                        <article className={`ep${active ? ' active' : ''}`}>
+                          <div className="still">
+                            {ep.still_path && (
+                              <img loading="lazy" src={img(ep.still_path, 'w300')} alt="" />
+                            )}
+                            <span className="epnum">
+                              EP {String(ep.episode_number).padStart(2, '0')}
+                            </span>
+                          </div>
+                          <div>
+                            <div className="ep-name">
+                              {ep.name || `Episode ${ep.episode_number}`}
+                              {ep.runtime > 0 && (
+                                <span className="dur">{runtimeLabel(ep.runtime)}</span>
+                              )}
+                            </div>
+                            {ep.overview && <p className="ep-over">{ep.overview}</p>}
+                          </div>
+                        </article>
+                      </Link>
+                    )
+                  })}
+                </div>
+              )}
+            </>
+          )}
+        </section>
       )}
     </div>
   )

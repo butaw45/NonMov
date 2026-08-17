@@ -5,3 +5,7 @@ dist
 *.log
 .DS_Store
 graphify-out/
+server/.env
+server/node_modules/
+skills-lock.json
+.superpowers

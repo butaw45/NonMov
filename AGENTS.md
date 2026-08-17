@@ -22,10 +22,22 @@ Dokumen PRD lengkap: `docs/prd-tmdb-netflix-clone.md`.
 ## Struktur
 
 - `src/main.jsx`, `src/App.jsx` — entry point & routing
-- `src/pages/` — 8 halaman (Home, Browse, Search, Detail, Watch, Watchlist, Setup, NotFound)
-- `src/components/` — komponen UI (Navbar, Hero, Row, PosterCard, dll)
-- `src/lib/` — klien TMDB (`tmdb.js`), watchlist lokal (`watchlist.js`), hooks, utils
+- `src/pages/` — 11 halaman (Home, Browse, Search, Detail, Watch, Watchlist, Setup, NotFound, Admin, AdminEntry, AdminLogin)
+- `src/components/` — komponen UI (Navbar, Hero, Row, PosterCard, AdminLayout, dll)
+- `src/lib/` — klien TMDB (`tmdb.js`), klien Admin API (`api.js`), watchlist lokal (`watchlist.js`), history (`history.js`), hooks, utils
 - `src/styles/` — CSS (tokens, layout, components, pages)
+- `server/` — backend minimal Express: proxy TMDB, `/api/catalog`, Admin API `/admin/api/*`, static serve `dist/` (produksi)
+  - `server/index.js` — entry server (port 4001)
+  - `server/admin.js` — business logic admin (auth sesi, CRUD entri, auto-match TMDB)
+  - `server/adminRoutes.js` — Express router `/admin/api/*` (proteksi cookie `admin_session`)
+  - `server/catalog.json` — katalog konten custom `{ entries, sessions }` (di-commit; kelola via `/admin`)
+  - `server/.env` — API key TMDB + `ADMIN_USER`/`ADMIN_PASS` (gitignore; contoh di `server/.env.example`)
+
+## Perintah Backend
+
+- `cd server && npm install` — install dependensi backend (Express)
+- `cd server && npm run dev` — backend dev (load `server/.env` via `--env-file`, watch restart)
+- `cd server && npm start` — produksi: static `dist/` + proxy TMDB (butuh `npm run build` dulu di root)
 
 ## Aturan Workflow (WAJIB diikuti agen)
 
@@ -55,6 +67,29 @@ Dokumen PRD lengkap: `docs/prd-tmdb-netflix-clone.md`.
    lebih dari satu opsi yang masuk akal (UX, bahasa, arsitektur, dsb.), WAJIB
    tanyakan ke user dulu sebelum memutuskan. Jangan memilih sepihak.
 
+7. **Skill selection (baca hanya yang load-bearing)** — skill bukan checklist seragam;
+   tiap doc punya biaya konteks + latency. Sebelum planning/design/implementation/review:
+   a. **Pilah**: tentukan skill mana yang *menentukan hasil* task ini — baca HANYA itu,
+      sisanya boleh skip. Bukan "baca semua yang relevan".
+   b. **Tabel minimum wajib** (non-negotiable untuk kategori ini):
+      - Fitur/behavior baru → `brainstorming` (pahami intent dulu)
+      - Perubahan arsitektur/interface antar-modul → `codebase-design`
+      - Ada term/ambiguity domain → `domain-modeling`
+      - Rancangan/plan multi-langkah → `writing-plans`
+      - Implementasi fitur/bugfix → `tdd` (test-first), atau minimal
+        `test-driven-development`
+      - Sebelum merge/PR → `requesting-code-review` + reviewer subagent
+      - Setiap klaim "done" → pintu verifikasi (rule 7c)
+   c. **Pintu verifikasi WAJIB sebelum "done"** (ini yang paling penting — lebih
+      menentukan kualitas daripada doc mana yang dibaca): klaim selesai hanya
+      boleh keluar setelah bukti nyata — build lulus, test/smoke jalan, atau
+      reviewer subagent approve. Tanpa bukti = belum selesai.
+   d. **Rancangan/spec sudah ada dari sesi lalu** → cukup *refresh* singkat (tidak
+      perlu baca ulang penuh), pastikan keputusan design masih relevan.
+   e. Kalau tidak yakin skill mana yang tepat → pakai `find-skills` untuk menemukan;
+      jangan menebak.
+   f. Catat di issue/plan jika skill tertentu digunakan.
+
 ## Catatan
 
 - **Dua sistem graf — pembagian tugas:**
@@ -65,5 +100,30 @@ Dokumen PRD lengkap: `docs/prd-tmdb-netflix-clone.md`.
     snapshot per run via skill `/graphify` (terpasang global di
     `~/.agents/skills/graphify/`). Sudah di-gitignore; bukan sumber kebenaran
     struktur kode.
+- **Kapan pakai yang mana:** gunakan `graphify` untuk eksplorasi visualisasi
+  codebase secara holistik (graph interaktif, community detection, god nodes).
+  Gunakan `codebase-memory` untuk query kode spesifik (fungsi, caller, definisi).
+  Keduanya melengkapi: graphify untuk "peta", codebase-memory untuk "detail".
+- **Kapan graphify digunakan:**
+  - Eksplorasi awal codebase (onboarding, audit arsitektur)
+  - Review PR/branch yang berdampak luas (multiple file, multi-module)
+  - Mencari cross-cutting concerns atau dead code yang tidak terlihat dari satu file
+  - Presentasi visual arsitektur ke stakeholder
+  - Pertanyaan "apa hubungan antar modul?" yang butuh community detection
+- **Kapan graphify TIDAK digunakan:**
+  - Bug fix sederhana (satu file, satu fungsi)
+  - Menambahkan fitur kecil yang sudah punya lokasi jelas
+  - Query spesifik ("siapa yang memanggil X?") — pakai codebase-memory saja
+  - Setiap commit/perubahan kecil — terlalu berat untuk incremental changes
+- **Kapan graphify di-rebuild:**
+  - Setelah merge PR besar yang mengubah struktur codebase secara signifikan
+  - Setiap kali selesai milestone fitur yang mengubah >20% file
+  - Sebelum eksplorasi arsitektur untuk memastikan graph fresh
+  - Setelah pergantian branch besar (misal: merge dev ke main)
+- **Kapan graphify TIDAK di-rebuild:**
+  - Setiap perubahan file kecil — codebase-memory cukup
+  - Saat debugging satu bug — gunakan graph yang ada atau codebase-memory
+  - Saat implementasi fitur berantai (tunggu sampai milestone selesai)
+  - Jika graphify-out/graph.json ada dan masih relevan — fast path query saja
 - Remote repo: https://github.com/butaw45/NonMov.git (branch utama: `main`)
 - Identitas git diset **lokal** di repo ini: Muhammad Haris <hariis12k@gmail.com>

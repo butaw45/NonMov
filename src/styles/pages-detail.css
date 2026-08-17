@@ -190,6 +190,22 @@
 .ep .ep-name { font-weight: 800; font-size: 14.5px; display: flex; gap: 10px; align-items: baseline; flex-wrap: wrap; }
 .ep .ep-name .dur { color: var(--faint); font-size: 12px; font-weight: 600; }
 .ep .ep-over { color: var(--muted); font-size: 13px; margin-top: 4px; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; }
+.ep-watch { margin-top: 10px; }
+.ep.active { border-color: var(--amber); background: var(--panel); }
+.ep.active .epnum { background: var(--amber); color: var(--amber-ink); }
+
+/* Daftar episode di halaman player */
+.watch-eps { margin-top: 28px; }
+.watch-eps .ep-list {
+  max-height: 480px;
+  overflow-y: auto;
+  padding-right: 6px;
+  scrollbar-width: thin;
+}
+
+@media (max-width: 860px) {
+  .watch-eps .ep-list { max-height: 60vh; }
+}
 
 @media (max-width: 860px) {
   .detail-top { grid-template-columns: 1fr; gap: 24px; align-items: start; }

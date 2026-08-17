@@ -1,0 +1,13 @@
+{
+  "name": "seluloid-server",
+  "private": true,
+  "version": "0.1.0",
+  "type": "module",
+  "scripts": {
+    "start": "node index.js",
+    "dev": "node --watch --env-file=.env index.js"
+  },
+  "dependencies": {
+    "express": "^4.21.2"
+  }
+}
