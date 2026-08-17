@@ -67,18 +67,28 @@ Dokumen PRD lengkap: `docs/prd-tmdb-netflix-clone.md`.
    lebih dari satu opsi yang masuk akal (UX, bahasa, arsitektur, dsb.), WAJIB
    tanyakan ke user dulu sebelum memutuskan. Jangan memilih sepihak.
 
-7. **Selalu cek skill sebelum tindakan** — sebelum melakukan planning, design,
-   implementation, review, atau tindakan apapun:
-   a. Cek apakah ada skill yang relevan (melalui `find-skills` atau daftar skill
-      yang tersedia).
-   b. Jika ada skill relevan, WAJIB baca dan gunakan skill tersebut sebelum
-      melanjutkan. Jangan langsung implement tanpa skill.
-   c. Skill yang relevan untuk plan/design: `brainstorming`, `domain-modeling`,
-      `codebase-design`, `writing-plans`. Untuk implementasi: `subagent-driven-development`,
-      `executing-plans`, `tdd`, `verification-before-completion`.
-   d. Jika tidak yakin skill mana yang relevan, gunakan `ask-matt` sebagai router
-      untuk menentukan skill/flow yang tepat sebelum melanjutkan.
-   e. Catat di plan/issue jika skill tertentu digunakan.
+7. **Skill selection (baca hanya yang load-bearing)** — skill bukan checklist seragam;
+   tiap doc punya biaya konteks + latency. Sebelum planning/design/implementation/review:
+   a. **Pilah**: tentukan skill mana yang *menentukan hasil* task ini — baca HANYA itu,
+      sisanya boleh skip. Bukan "baca semua yang relevan".
+   b. **Tabel minimum wajib** (non-negotiable untuk kategori ini):
+      - Fitur/behavior baru → `brainstorming` (pahami intent dulu)
+      - Perubahan arsitektur/interface antar-modul → `codebase-design`
+      - Ada term/ambiguity domain → `domain-modeling`
+      - Rancangan/plan multi-langkah → `writing-plans`
+      - Implementasi fitur/bugfix → `tdd` (test-first), atau minimal
+        `test-driven-development`
+      - Sebelum merge/PR → `requesting-code-review` + reviewer subagent
+      - Setiap klaim "done" → pintu verifikasi (rule 7c)
+   c. **Pintu verifikasi WAJIB sebelum "done"** (ini yang paling penting — lebih
+      menentukan kualitas daripada doc mana yang dibaca): klaim selesai hanya
+      boleh keluar setelah bukti nyata — build lulus, test/smoke jalan, atau
+      reviewer subagent approve. Tanpa bukti = belum selesai.
+   d. **Rancangan/spec sudah ada dari sesi lalu** → cukup *refresh* singkat (tidak
+      perlu baca ulang penuh), pastikan keputusan design masih relevan.
+   e. Kalau tidak yakin skill mana yang tepat → pakai `find-skills` untuk menemukan;
+      jangan menebak.
+   f. Catat di issue/plan jika skill tertentu digunakan.
 
 ## Catatan
 
