@@ -118,6 +118,17 @@ export default function Watch() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [watchSeason, detail?.id])
 
+  // Player provider selector: resolve list dari entry/config, aktif dari dropdown.
+  // Dihitung SEBELUM efek player (bawah) yang bergantung `src` — deps-array [src]
+  // dievaluasi saat render, jadi `src` harus sudah diinisialisasi (hindari TDZ).
+  const providers = resolveProviders(catalogEntry, config, kind)
+  const active = providers[activeIdx] ?? providers[0]
+  const isVidukiActive = active?.type === 'viduki'
+  const src = srcQuery || (active?.type === 'self' ? active.video_url : undefined)
+  const showViduki = isVidukiActive && !srcQuery
+  const hasStream = src || isVidukiActive
+  const vidukiTmdbId = active?.type === 'viduki' ? (catalogEntry?.tmdb_id ?? Number(id)) : undefined
+
   useEffect(() => {
     if (!src || !videoRef.current) return
     const isHls = /\.m3u8($|\?)/i.test(src)
@@ -198,15 +209,6 @@ export default function Watch() {
     q.set('episode', String(e))
     return `/tonton/tv/${id}?${q}`
   }
-
-  // Player provider selector: resolve list dari entry/config, aktif dari dropdown
-  const providers = resolveProviders(catalogEntry, config, kind)
-  const active = providers[activeIdx] ?? providers[0]
-  const isVidukiActive = active?.type === 'viduki'
-  const src = srcQuery || (active?.type === 'self' ? active.video_url : undefined)
-  const showViduki = isVidukiActive && !srcQuery
-  const hasStream = src || isVidukiActive
-  const vidukiTmdbId = active?.type === 'viduki' ? (catalogEntry?.tmdb_id ?? Number(id)) : undefined
 
   return (
     <div className="watch-page">
