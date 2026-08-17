@@ -105,8 +105,19 @@ function normalizeProviders(providers) {
 }
 
 export function updateConfig(patch) {
-  const current = getConfig()
-  const next = { ...current }
+  // Bangun dari parse RAW, bukan proyeksi getConfig(), supaya kunci top-level
+  // yang tak dikenal di config.json tidak hilang saat round-trip read->write.
+  let raw = {}
+  try {
+    raw = JSON.parse(readFileSync(CONFIG_PATH, 'utf8'))
+  } catch {
+    raw = {}
+  }
+  const next = {
+    ...raw,
+    // providers: pakai seed dari legacy bila config belum punya `providers`
+    providers: Array.isArray(raw.providers) ? raw.providers : seedProviders(raw),
+  }
 
   if (patch.providers !== undefined) {
     next.providers = normalizeProviders(patch.providers)

@@ -68,6 +68,10 @@ export function resolveProviders(entry, config, kind) {
   const flat = flatToProviders(entry)
   if (flat.length) return flat
   return (config?.providers || []).filter(
-    (p) => p.enabled && (p.media_type == null || p.media_type === kind),
+    (p) =>
+      p &&
+      typeof p === 'object' &&
+      p.enabled &&
+      (p.media_type == null || p.media_type === kind),
   )
 }

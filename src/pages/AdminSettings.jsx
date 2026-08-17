@@ -72,9 +72,9 @@ export default function AdminSettings() {
     setSaved(false)
     setSaving(true)
     try {
-      // Kirim shape lengkap; id dibuang — server yang bikin saat simpan.
+      // Kirim shape lengkap incl. id bila ada — server hanya bikin id utk item baru.
       await adminApi.updateConfig({
-        providers: providers.map(({ id, ...p }) => p),
+        providers,
       })
       setSaved(true)
     } catch (err) {
