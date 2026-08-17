@@ -78,14 +78,18 @@ app.get('/api/catalog', (req, res) => {
 app.get('/api/catalog/lookup', (req, res) => {
   const tmdbId = Number(req.query.tmdb_id)
   const type = String(req.query.type || '')
-  const item = loadCatalog().find((c) => c.tmdb_id === tmdbId && c.type === type)
+  const item = loadCatalog().find(
+    (c) => (c.status || 'published') === 'published' && c.tmdb_id === tmdbId && c.type === type
+  )
   if (!item) return res.status(404).json({ status_message: 'Not found' })
   res.json(item)
 })
 
 // GET /api/catalog/:id — satu entri by id internal
 app.get('/api/catalog/:id', (req, res) => {
-  const item = loadCatalog().find((c) => String(c.id) === req.params.id)
+  const item = loadCatalog().find(
+    (c) => (c.status || 'published') === 'published' && String(c.id) === req.params.id
+  )
   if (!item) return res.status(404).json({ status_message: 'Not found' })
   res.json(item)
 })
