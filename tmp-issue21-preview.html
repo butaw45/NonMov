@@ -1,0 +1,213 @@
+<!doctype html>
+<html lang="id">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Preview — Edit &amp; Reorder Provider Global</title>
+<style>
+  :root{
+    --bg:#0e0c09; --bg-deep:#090806; --panel:#171310; --panel-2:#1f1a14;
+    --ink:#f3ecdd; --ink-dim:#d8cdb6; --muted:#93887a; --faint:#6b6255;
+    --line:rgba(243,236,221,.09); --line-strong:rgba(243,236,221,.18);
+    --amber:#e9b458; --amber-hi:#f6c976; --amber-ink:#171310;
+    --radius:10px; --radius-sm:8px; --radius-xs:6px;
+    --font-ui:"Manrope",system-ui,-apple-system,"Segoe UI",sans-serif;
+    --font-mono:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;
+  }
+  *{box-sizing:border-box}
+  body{margin:0;background:
+      radial-gradient(1200px 600px at 85% -10%,rgba(233,180,88,.06),transparent 60%),
+      var(--bg);color:var(--ink);font-family:var(--font-ui);font-size:15px;line-height:1.55}
+  .wrap{max-width:920px;margin:0 auto;padding:40px 20px 80px}
+  .banner{display:flex;justify-content:space-between;align-items:center;gap:14px;flex-wrap:wrap;
+    border:1px solid rgba(233,180,88,.35);background:rgba(233,180,88,.06);
+    border-radius:var(--radius);padding:14px 18px;margin-bottom:26px}
+  .banner h1{font-size:17px;margin:0;color:var(--amber-hi)}
+  .banner p{margin:4px 0 0;font-size:13px;color:var(--muted)}
+  .pill{border:1px solid var(--line-strong);border-radius:999px;padding:4px 12px;font-size:12px;color:var(--ink-dim)}
+  h3{font-size:16px;margin:0 0 6px}
+  .hint{color:var(--muted);font-size:13.5px;margin:0 0 18px;max-width:70ch}
+  .card{background:var(--panel);border:1px solid var(--line);border-radius:var(--radius);padding:20px}
+
+  /* ---- Field (global, sesuai tokens.css app asli) ---- */
+  .field{display:block;width:100%;background:var(--panel);border:1px solid var(--line);
+    border-radius:var(--radius-xs);padding:10px 12px;color:var(--ink);font-size:13.5px;font-family:var(--font-ui);margin-top:6px}
+  .field:focus{outline:none;border-color:var(--amber)}
+  select.field{cursor:pointer} select.field option{background:var(--panel)}
+
+  .provider-item{display:flex;align-items:center;gap:14px;flex-wrap:wrap;
+    border:1px solid var(--line);border-radius:var(--radius-sm);padding:12px 14px;margin-bottom:10px;background:var(--bg-deep)}
+  .provider-item.editing{border-color:var(--amber);background:var(--panel-2)}
+  .provider-main{flex:1 1 320px;min-width:260px}
+  .provider-main .label{font-weight:700}
+  .badge{display:inline-block;border:1px solid var(--line-strong);border-radius:999px;
+    padding:1px 8px;font-size:11px;color:var(--muted);margin-left:6px;vertical-align:1px}
+  .urls{display:block;color:var(--faint);font-size:12px;word-break:break-all;font-family:var(--font-mono);margin-top:4px}
+  .reorder{display:flex;flex-direction:column;gap:4px;flex:none}
+  .reorder button{font-size:13px;line-height:1}
+  .actions{display:flex;gap:8px;flex:none;flex-wrap:wrap}
+  .btn{border:1px solid var(--line-strong);background:rgba(23,19,16,.55);color:var(--ink);
+    border-radius:var(--radius-xs);padding:8px 14px;font-size:13px;cursor:pointer;font-family:var(--font-ui);transition:all .15s}
+  .btn:hover{border-color:var(--amber);color:var(--amber-hi)}
+  .btn:disabled{opacity:.3;cursor:not-allowed;border-color:var(--line);color:var(--faint)}
+  .btn-primary{background:var(--amber);color:var(--amber-ink);border-color:var(--amber);font-weight:700}
+  .btn-primary:hover{background:var(--amber-hi);color:var(--amber-ink)}
+  .btn-sm{padding:8px 12px;font-size:12.5px}
+  .btn-ghost-active{border-color:var(--amber);color:var(--amber-hi)}
+  .provider-toggle{display:flex !important;align-items:center;gap:6px;font-size:13px;color:var(--ink-dim);margin:0 !important}
+  .provider-toggle input{accent-color:var(--amber)}
+
+  /* ---- Form (edit inline & tambah) ---- */
+  .form-grid{display:grid;grid-template-columns:1fr 1fr;gap:14px;width:100%}
+  .form-grid .span2{grid-column:1 / -1}
+  .form-grid label{display:block;font-size:13px;font-weight:600;color:var(--ink-dim)}
+  .form-actions{grid-column:1 / -1;display:flex;gap:8px;justify-content:flex-end}
+  h4{margin:22px 0 14px;font-size:14px}
+  .notes{margin-top:26px;border-top:1px solid var(--line);padding-top:16px;font-size:13px;color:var(--muted)}
+  .notes li{margin-bottom:6px}
+  .kbd{font-family:var(--font-mono);font-size:12px;border:1px solid var(--line-strong);border-radius:4px;padding:1px 6px;color:var(--ink-dim)}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <div class="banner">
+    <div>
+      <h1>Rancangan — Edit &amp; Reorder Provider Global</h1>
+      <p>Mock interaktif mengikuti token tema Seluloid. Preview desain, bukan implementasi app. (Klik tombol untuk mencoba.)</p>
+    </div>
+    <span class="pill">DESIGN / REVIEW</span>
+  </div>
+
+  <div class="notes">
+    <strong>Alur yang digambarkan:</strong>
+    <ul>
+      <li><span class="kbd">Ubah</span> → row berubah jadi <em>form inline</em> (Label, Media Type, 2 URL, Aktif) dengan tombol <span class="kbd">Simpan</span>/<span class="kbd">Batal</span>. Panah &amp; Hapus nonaktif selama edit.</li>
+      <li><span class="kbd">↑</span>/<span class="kbd">↓</span> → menggeser urutan provider (disabled di tepi). Urutan array = urutan tampil di dropdown Watch setelah "Simpan Pengaturan".</li>
+    </ul>
+  </div>
+
+  <div class="card">
+    <h3>Provider Global</h3>
+    <p class="hint">Pool penyedia tontonan yang dipakai semua judul (kecuali ada override self-hosted per judul). Matikan/nyalakan toggle untuk aktif-nonaktif.</p>
+
+    <!-- List provider (di-render oleh JS) -->
+    <div id="list"></div>
+
+    <!-- Form Tambah (existing behavior, layout dirapikan) -->
+    <h4>Tambah Provider</h4>
+    <div class="form-grid">
+      <label>Label
+        <input class="field" placeholder="embed"></label>
+      <label>Media Type
+        <select class="field">
+          <option value="">Movie + TV (semua)</option>
+          <option value="movie">Movie</option>
+          <option value="tv">TV</option>
+        </select></label>
+      <label class="span2">URL Template Movie (wajib)
+        <input class="field" placeholder="https://.../{tmdb_id}"></label>
+      <label class="span2">URL Template TV
+        <input class="field" placeholder="https://.../{tmdb_id}/{season}/{episode}"></label>
+    </div>
+    <div class="form-actions" style="margin-top:16px">
+      <button class="btn">Tambah Provider</button>
+      <button class="btn btn-primary">Simpan Pengaturan</button>
+    </div>
+  </div>
+
+  <div class="notes"><strong>Kejelasan untuk reviewer:</strong> tombol <span class="kbd">Ubah</span> tidak menyimpan ke server — semua perubahan (edit/reorder/toggle) menunggu tombol <span class="kbd">Simpan Pengaturan</span>, sama seperti alur Tambah yang sudah ada. Disable panah-Hapus saat editing mencegah row yang sedang diedit pindah/terhapus.</div>
+</div>
+
+<script>
+  const seeds = [
+    {label:'viduki.net', media:'', movie:'https://www.viduki.net/2/movie/{tmdb_id}', tv:'https://www.viduki.net/2/tv/{tmdb_id}/{season}/{episode}', enabled:true},
+    {label:'videasy', media:'', movie:'https://player.videasy.net/movie/{tmdb_id}', tv:'https://player.videasy.net/tv/{tmdb_id}/{season}/{episode}', enabled:true},
+    {label:'cmovies', media:'movie', movie:'https://cmovies.net/f/{tmdb_id}', tv:'', enabled:false},
+  ];
+  let providers = seeds.map(p=>({...p}));
+  let editing = null; // index
+
+  const mediaLabel = mt => mt==='movie'?'Movie':mt==='tv'?'TV':'Movie + TV';
+  const listEl = document.getElementById('list');
+
+  function fld(model, key, ph, labelText, span2){
+    const o = document.createElement('label');
+    if (span2) o.className='span2';
+    o.appendChild(document.createTextNode(labelText));
+    const inp = document.createElement('input');
+    inp.className='field'; inp.type='text'; inp.placeholder=ph||''; inp.value=model[key]||'';
+    inp.oninput=()=>{model[key]=inp.value};
+    o.appendChild(inp);
+    return o;
+  }
+  function mediaSel(model){
+    const l=document.createElement('label'); l.textContent='Media Type';
+    const s=document.createElement('select'); s.className='field';
+    [['','Movie + TV (semua)'],['movie','Movie'],['tv','TV']].forEach(([v,t])=>{
+      const op=document.createElement('option'); op.value=v; op.textContent=t; s.appendChild(op);
+    }); s.value=model.media||''; s.onchange=()=>model.media=s.value; l.appendChild(s);
+    return l;
+  }
+
+  function render(){
+    listEl.innerHTML='';
+    providers.forEach((p,i)=>{
+      const row=document.createElement('div');
+      row.className='provider-item'+(editing===i?' editing':'');
+      if(editing===i){
+        const draft={...p};
+        const f=document.createElement('div'); f.className='form-grid';
+        f.appendChild(fld(draft,'label','embed','Label'));
+        f.appendChild(mediaSel(draft));
+        f.appendChild(fld(draft,'movie','https://.../{tmdb_id}','URL Template Movie (wajib)',true));
+        f.appendChild(fld(draft,'tv','https://.../{tmdb_id}/{season}/{episode}','URL Template TV',true));
+        const en=document.createElement('label'); en.className='provider-toggle';
+        const cb=document.createElement('input'); cb.type='checkbox'; cb.checked=!!draft.enabled;
+        cb.onchange=()=>draft.enabled=cb.checked; en.appendChild(cb); en.appendChild(document.createTextNode(' Aktif'));
+        f.appendChild(en);
+        const a=document.createElement('div'); a.className='form-actions';
+        const s=document.createElement('button'); s.className='btn btn-primary btn-sm'; s.textContent='Simpan';
+        s.onclick=()=>{providers[i]={...draft}; editing=null; render()};
+        const c=document.createElement('button'); c.className='btn btn-sm'; c.textContent='Batal';
+        c.onclick=()=>{editing=null; render()};
+        a.appendChild(s); a.appendChild(c); f.appendChild(a);
+        row.appendChild(f);
+      } else {
+        const m=document.createElement('div'); m.className='provider-main';
+        const lab=document.createElement('span'); lab.className='label'; lab.textContent=p.label;
+        m.appendChild(lab);
+        const b1=document.createElement('span'); b1.className='badge'; b1.textContent='embed';
+        const b2=document.createElement('span'); b2.className='badge'; b2.textContent=mediaLabel(p.media);
+        m.appendChild(b1); m.appendChild(b2);
+        const u=document.createElement('span'); u.className='urls'; u.textContent=p.movie+(p.tv?'\n'+p.tv:'');
+        m.appendChild(u);
+        row.appendChild(m);
+
+        const r=document.createElement('div'); r.className='reorder';
+        const up=document.createElement('button'); up.className='btn btn-sm'; up.textContent='↑';
+        up.disabled = i===0 || editing!==null; up.title='Naik';
+        up.onclick=()=>{[providers[i-1],providers[i]]=[providers[i],providers[i-1]]; render()};
+        const dn=document.createElement('button'); dn.className='btn btn-sm'; dn.textContent='↓';
+        dn.disabled = i===providers.length-1 || editing!==null; dn.title='Turun';
+        dn.onclick=()=>{[providers[i+1],providers[i]]=[providers[i],providers[i+1]]; render()};
+        r.appendChild(up); r.appendChild(dn); row.appendChild(r);
+
+        const act=document.createElement('div'); act.className='actions';
+        const tg=document.createElement('label'); tg.className='provider-toggle';
+        const cb=document.createElement('input'); cb.type='checkbox'; cb.checked=p.enabled;
+        cb.onchange=()=>{p.enabled=cb.checked; render()};
+        tg.appendChild(cb); tg.appendChild(document.createTextNode(' Aktif'));
+        const ub=document.createElement('button'); ub.className='btn btn-ghost-active btn-sm'; ub.textContent='Ubah';
+        ub.onclick=()=>{editing=i; render()};
+        const ha=document.createElement('button'); ha.className='btn btn-sm'; ha.textContent='Hapus';
+        ha.onclick=()=>{providers.splice(i,1); if(editing>i)editing--; else if(editing===i)editing=null; render()};
+        act.appendChild(tg); act.appendChild(ub); act.appendChild(ha);
+        row.appendChild(act);
+      }
+      listEl.appendChild(row);
+    });
+  }
+  render();
+</script>
+</body>
+</html>
