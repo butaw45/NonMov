@@ -23,6 +23,19 @@ const PORT = Number(process.env.PORT || 4001)
 const TMDB = 'https://api.themoviedb.org/3'
 const CATALOG_PATH = path.join(__dirname, 'catalog.json')
 
+// ---- Cache TMDB (in-memory, TTL 2 kelas) ---------------------
+const DYNAMIC_TTL = 600
+const STATIC_TTL = 86400
+const MAX_ENTRIES = 500
+const DYNAMIC_TOKENS = ['/search/', '/trending/', '/popular', '/top_rated', '/upcoming', '/now_playing']
+
+function ttlFor(subPath) {
+  return DYNAMIC_TOKENS.some((t) => subPath.includes(t)) ? DYNAMIC_TTL : STATIC_TTL
+}
+
+const tmdbCache = new Map() // key -> { t, data }
+
+
 if (!API_KEY) {
   console.error('[seluloid] TMDB_API_KEY belum di-set. Isi server/.env dulu (lihat .env.example).')
   process.exit(1)
@@ -43,10 +56,28 @@ app.all('/3/*', async (req, res) => {
     }
     url.searchParams.set('api_key', API_KEY)
 
+    // Cache key tanpa api_key (dihapus dari string query).
+    const cacheKey =
+      subPath + '?' + url.searchParams.toString().replace(/api_key=[^&]*&?/, '')
+
+    const ttl = ttlFor(subPath)
+    const hit = tmdbCache.get(cacheKey)
+    if (hit && Date.now() - hit.t < ttl) {
+      res.set('res-cache', 'HIT')
+      return res.json(hit.data)
+    }
+
     const upstream = await fetch(url.toString(), {
       headers: { Accept: 'application/json' },
     })
     const body = await upstream.json()
+    if (upstream.ok) {
+      if (!tmdbCache.has(cacheKey) && tmdbCache.size >= MAX_ENTRIES) {
+        tmdbCache.delete(tmdbCache.keys().next().value)
+      }
+      tmdbCache.set(cacheKey, { t: Date.now(), data: body })
+      res.set('res-cache', 'MISS')
+    }
     res.status(upstream.status).json(body)
   } catch (e) {
     res.status(502).json({ status_message: 'Upstream TMDB error', detail: String(e?.message || e) })
