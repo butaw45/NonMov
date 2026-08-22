@@ -5,6 +5,7 @@ import { useTitle } from '../lib/hooks'
 import { cx, keyOf, mediaTypeOf } from '../lib/utils'
 import { COUNTRIES, DEBOUNCE_MS, ratingParam } from '../lib/browseFilters'
 import PosterCard from '../components/PosterCard'
+import { GridSkeleton } from '../components/Skeletons'
 import { useWatchlist, toggleWatch } from '../lib/watchlist'
 import { IconAlert, IconCompass } from '../components/Icons'
 
@@ -91,7 +92,7 @@ export default function Browse() {
     tmdb.discover(tipe, buildParams(1))
       .then((d) => {
         if (!on) return
-        setItems((d.results || []).filter((x) => x.poster_path))
+        setItems((d.results || []).filter((x) => x?.poster_path))
         setTotalPages(Math.min(d.total_pages || 1, 500))
         setLoading(false)
       })
@@ -110,7 +111,7 @@ export default function Browse() {
     const next = page + 1
     tmdb.discover(tipe, buildParams(next))
       .then((d) => {
-        setItems((xs) => [...xs, ...(d.results || []).filter((x) => x.poster_path)])
+        setItems((xs) => [...xs, ...(d.results || []).filter((x) => x?.poster_path)])
         setPage(next)
         setLoadingMore(false)
       })

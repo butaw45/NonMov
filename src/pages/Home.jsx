@@ -119,8 +119,8 @@ export default function Home() {
   }
 
   const featured =
-    rows.trendW?.find((x) => x.backdrop_path && x.overview) || rows.trendW?.[0] || null
-  const clean = (xs) => xs?.filter((x) => x.poster_path) || []
+    rows.trendW?.find((x) => x?.backdrop_path && x?.overview) || rows.trendW?.[0] || null
+  const clean = (xs) => xs?.filter((x) => x?.poster_path) || []
 
   return (
     <>
