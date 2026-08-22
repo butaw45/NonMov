@@ -98,6 +98,17 @@ Dokumen PRD lengkap: `docs/prd-tmdb-netflix-clone.md`.
    dipakai di line 229 file yang sama. Pengecualian: symbol yang jelas-jelas
    hanya digunakan dalam satu fungsi lokal (bukan export/import).
 
+9. **Bug UI wajib diverifikasi di browser** — error "Proyektor macet" / crash
+   ErrorBoundary tidak bisa didiagnosis dari source code saja. Wajib:
+   a. Baca `diagnosing-bugs` skill (fase 1: feedback loop)
+   b. Gunakan `playwright-cli` untuk console capture + snapshot:
+      `playwright-cli open <url>` → `playwright-cli console` tangkap error →
+      `playwright-cli snapshot` lihat struktur DOM
+   c. Setelah fix: `playwright-cli reload` → verifikasi 0 error + page render benar
+   d. Insiden: 2026-08-22, Browse crash — tanpa browser capture, hanya terlihat
+      "Proyektor macet" generic. Console mengungkap `ReferenceError: urut`,
+      `negara`, dan `keyOf is not defined`.
+
 ## Catatan
 
 - **Dua sistem graf — pembagian tugas:**
