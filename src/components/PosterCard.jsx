@@ -1,16 +1,14 @@
 import { Link } from 'react-router-dom'
 import { img } from '../lib/tmdb'
 import { titleOf, yearOf, mediaTypeOf, ratingOf, cx } from '../lib/utils'
-import { useWatchlist, toggleWatch } from '../lib/watchlist'
 import { IconPlus, IconCheck, IconStar } from './Icons'
 
-export default function PosterCard({ item }) {
+// Presentasional murni — state dikontrol oleh caller via props saved + onToggle.
+export default function PosterCard({ item, saved, onToggle }) {
   const type = mediaTypeOf(item)
   const title = titleOf(item)
   const poster = img(item.poster_path, 'w342')
   const rating = ratingOf(item)
-  const list = useWatchlist()
-  const saved = list.some((x) => x.type === type && x.id === item.id)
 
   return (
     <Link className="card" to={`/judul/${type}/${item.id}`}>
@@ -37,7 +35,7 @@ export default function PosterCard({ item }) {
             aria-label={saved ? `Hapus ${title} dari daftar` : `Simpan ${title} ke daftar`}
             onClick={(e) => {
               e.preventDefault()
-              toggleWatch(item)
+              onToggle?.(item)
             }}
           >
             {saved ? <IconCheck size={14} /> : <IconPlus size={14} />}

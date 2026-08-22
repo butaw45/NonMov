@@ -2,10 +2,10 @@ import { useEffect, useRef, useState } from 'react'
 import { useSearchParams } from 'react-router-dom'
 import { tmdb } from '../lib/tmdb'
 import { useTitle } from '../lib/hooks'
-import { cx, keyOf } from '../lib/utils'
+import { cx, keyOf, mediaTypeOf } from '../lib/utils'
 import { COUNTRIES, DEBOUNCE_MS, ratingParam } from '../lib/browseFilters'
 import PosterCard from '../components/PosterCard'
-import { GridSkeleton } from '../components/Skeletons'
+import { useWatchlist, toggleWatch } from '../lib/watchlist'
 import { IconAlert, IconCompass } from '../components/Icons'
 
 const THIS_YEAR = new Date().getFullYear()
@@ -19,11 +19,11 @@ export default function Browse() {
   const tahun = sp.get('tahun') || ''
   const rating = sp.get('rating') || ''
   const [draftRating, setDraftRating] = useState(rating)
-  // spRef: selalu merefleksikan sp terbaru — cegah stale closure di timeout debounce
   const spRef = useRef(sp)
   spRef.current = sp
   const urut = sp.get('urut') || 'populer'
   const negara = sp.get('negara') || ''
+  const list = useWatchlist()
 
   useTitle(tipe === 'tv' ? 'Jelajah Series' : 'Jelajah Film')
 
@@ -230,7 +230,7 @@ export default function Browse() {
         <>
           <div className="grid">
             {items.map((it) => (
-              <PosterCard item={it} key={keyOf(it)} />
+              <PosterCard item={it} key={keyOf(it)} saved={list.some((x) => x.type === mediaTypeOf(it) && x.id === it.id)} onToggle={toggleWatch} />
             ))}
           </div>
           <div className="load-more">

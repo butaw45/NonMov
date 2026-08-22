@@ -33,3 +33,7 @@ export function runtimeLabel(mins) {
   const m = mins % 60
   return h > 0 ? `${h} j ${m} mnt` : `${m} mnt`
 }
+
+export function catalogNo(id) {
+  return `NO. ${String(id).padStart(5, '0')}`
+}

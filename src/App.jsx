@@ -1,6 +1,6 @@
 import { lazy, Suspense, useEffect } from 'react'
 import { BrowserRouter, Route, Routes, useLocation } from 'react-router-dom'
-import Navbar from './components/Navbar'
+import TopBar from './components/TopBar'
 import Footer from './components/Footer'
 import BottomNav from './components/BottomNav'
 import ErrorBoundary from './components/ErrorBoundary'
@@ -48,7 +48,7 @@ function AppShell() {
 
   return (
     <>
-      {!isAdmin && <Navbar />}
+      {!isAdmin && <TopBar />}
       <ErrorBoundary>
         <main>
           <Suspense fallback={<DetailSkeleton />}>
