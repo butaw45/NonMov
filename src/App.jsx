@@ -18,7 +18,7 @@ const Detail = lazy(() => import('./pages/Detail'))
 const Watch = lazy(() => import('./pages/Watch'))
 // Admin panel (Issue #6) — lazy supaya tidak membebani bundle publik
 const AdminLogin = lazy(() => import('./pages/AdminLogin'))
-const AdminLayout = lazy(() => import('./components/AdminLayout'))
+const AdminLayout = lazy(() => import('./pages/AdminLayout'))
 const Admin = lazy(() => import('./pages/Admin'))
 const AdminEntry = lazy(() => import('./pages/AdminEntry'))
 const AdminSettings = lazy(() => import('./pages/AdminSettings'))

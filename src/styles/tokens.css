@@ -27,6 +27,9 @@
 
   --danger: #b0473c;        /* merah bata (error, hapus) — bukan merah Netflix */
 
+  --badge-ok: #9fd6ae;      /* hijau terang (badge published) */
+  --danger-ink: #ff9b8a;    /* merah terang (teks error/hover danger) */
+
   /* ---------- Alias kompatibilitas (amber → accent) ---------- */
   --amber: var(--accent);
   --amber-hi: var(--accent-hi);
@@ -63,6 +66,7 @@
   --radius-lg: 8px;
 
   /* ---------- Elevasi ---------- */
+  --shadow-lift: 0 4px 20px rgba(0, 0, 0, 0.5);
   --shadow-1: 0 1px 2px rgba(0, 0, 0, 0.4);
   --shadow-2: 0 8px 24px rgba(0, 0, 0, 0.45);
 
