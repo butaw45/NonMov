@@ -30,7 +30,7 @@ export default function AdminLogin() {
   return (
     <div className="admin-login">
       <form className="admin-card" onSubmit={onSubmit}>
-        <h1>Admin Seluloid</h1>
+        <h1>Admin LAYAR</h1>
         <p className="hint">Masuk untuk mengelola katalog.</p>
         {expired && <p className="error-box">Sesi berakhir, silakan masuk lagi.</p>}
         {error && <p className="error-box">{error}</p>}

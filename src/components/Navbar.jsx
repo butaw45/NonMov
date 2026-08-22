@@ -42,7 +42,7 @@ export default function Navbar() {
   return (
     <header className={cx('nav', (scrolled || pathname !== '/') && 'nav-solid')}>
       <div className="nav-inner">
-        <Link to="/" aria-label="Beranda Seluloid" className="nav-brand">
+        <Link to="/" aria-label="Beranda LAYAR" className="nav-brand">
           <Logo />
         </Link>
         <nav className="nav-links" aria-label="Navigasi utama">

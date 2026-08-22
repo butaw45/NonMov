@@ -10,7 +10,7 @@ export default function Setup() {
         <span className="kicker">Satu langkah lagi</span>
         <h1>Sambungkan dulu ke TMDB</h1>
         <p>
-          Seluloid mengambil seluruh data film &amp; series — poster, sinopsis, cast, rating —
+          LAYAR mengambil seluruh data film &amp; series — poster, sinopsis, cast, rating —
           dari TMDB. Kamu butuh API key untuk mulai; gratis dan hanya butuh sekitar dua menit.
         </p>
         <ol className="setup-steps">
