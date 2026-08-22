@@ -2,23 +2,18 @@
    Layout umum: navbar, nav bawah mobile, footer
    ============================================================ */
 
-/* ---------- Navbar ---------- */
-.nav {
-  position: fixed;
-  inset: 0 0 auto 0;
+/* ---------- TopBar (solid, selalu terlihat) ---------- */
+.topbar {
+  position: sticky;
+  top: 0;
   z-index: 100;
   height: var(--nav-h);
-  transition: background 0.25s ease, border-color 0.25s ease;
-  border-bottom: 1px solid transparent;
-}
-.nav-solid {
-  background: rgba(14, 12, 9, 0.92);
-  backdrop-filter: blur(10px);
-  border-bottom-color: var(--line);
+  background: var(--bg-deep);
+  border-bottom: 1px solid var(--line);
 }
 
-.nav-inner {
-  width: min(1440px, 100% - clamp(24px, 4vw, 64px));
+.topbar-inner {
+  width: min(var(--container), 100% - clamp(24px, 4vw, 64px));
   margin-inline: auto;
   height: 100%;
   display: flex;
@@ -26,43 +21,43 @@
   gap: 26px;
 }
 
-.nav-brand { display: inline-flex; align-items: center; flex: none; }
-.nav-brand svg { height: 30px; width: auto; }
+.topbar-brand { display: inline-flex; align-items: center; flex: none; }
+.topbar-brand svg { height: 30px; width: auto; }
 
-.nav-links {
+.topbar-links {
   display: flex;
   gap: 4px;
 }
-.nav-links a {
+.topbar-links a {
   padding: 7px 12px;
-  border-radius: 4px;
+  border-radius: var(--radius);
   font-size: 13.5px;
   font-weight: 600;
   color: var(--ink-dim);
-  transition: color 0.15s ease, background 0.15s ease;
+  transition: color var(--dur) var(--ease), background var(--dur) var(--ease);
 }
-.nav-links a:hover { color: var(--ink); background: rgba(243, 236, 221, 0.06); }
-.nav-links a.active {
-  color: var(--amber);
-  box-shadow: inset 0 -2px 0 var(--amber);
-  border-radius: 4px 4px 0 0;
+.topbar-links a:hover { color: var(--ink); background: var(--line); }
+.topbar-links a.active {
+  color: var(--accent);
+  box-shadow: inset 0 -2px 0 var(--accent);
+  border-radius: var(--radius) var(--radius) 0 0;
 }
 
-.nav-search {
+.topbar-search {
   margin-left: auto;
   display: flex;
   align-items: center;
   gap: 8px;
-  background: rgba(23, 19, 16, 0.7);
+  background: var(--panel);
   border: 1px solid var(--line);
   border-radius: 999px;
   padding: 7px 14px;
   min-width: 240px;
-  transition: border-color 0.15s ease, min-width 0.25s ease;
+  transition: border-color var(--dur) var(--ease), min-width 250ms var(--ease);
 }
-.nav-search:focus-within { border-color: var(--amber); min-width: 300px; }
-.nav-search svg { color: var(--muted); flex: none; }
-.nav-search input {
+.topbar-search:focus-within { border-color: var(--accent); min-width: 300px; }
+.topbar-search svg { color: var(--muted); flex: none; }
+.topbar-search input {
   background: none;
   border: 0;
   outline: none;
@@ -70,9 +65,9 @@
   color: var(--ink);
   font-size: 13.5px;
 }
-.nav-search input::placeholder { color: var(--faint); }
+.topbar-search input::placeholder { color: var(--faint); }
 
-.nav-list {
+.topbar-action {
   display: inline-flex;
   align-items: center;
   gap: 8px;
@@ -80,9 +75,9 @@
   font-size: 13.5px;
   font-weight: 600;
   padding: 7px 4px;
-  transition: color 0.15s ease;
+  transition: color var(--dur) var(--ease);
 }
-.nav-list:hover { color: var(--amber-hi); }
+.topbar-action:hover { color: var(--accent-hi); }
 
 /* ---------- Nav bawah (mobile) ---------- */
 .bottomnav {

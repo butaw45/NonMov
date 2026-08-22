@@ -110,24 +110,27 @@
 .row-track::-webkit-scrollbar { display: none; }
 .row-track > * { scroll-snap-align: start; }
 
-.row-arrow {
-  position: absolute;
-  top: 0;
-  bottom: 10px;
-  width: 44px;
-  z-index: 3;
+/* ---------- Strip arsip navigasi baris ---------- */
+.row-strip {
   display: flex;
-  align-items: center;
+  gap: 8px;
   justify-content: center;
-  color: var(--ink);
-  background: linear-gradient(90deg, rgba(14, 12, 9, 0.85), transparent);
-  opacity: 0;
-  transition: opacity 0.2s ease;
+  padding-top: var(--sp-4);
 }
-.row-arrow.right { right: 0; background: linear-gradient(270deg, rgba(14, 12, 9, 0.85), transparent); }
-.row-arrow.left { left: 0; }
-.row-body:hover .row-arrow, .row-arrow:focus-visible { opacity: 1; }
-@media (hover: none) { .row-arrow { display: none; } }
+.row-strip-num {
+  font-family: var(--font-mono);
+  font-size: var(--text-xs);
+  color: var(--muted);
+  padding: 2px 6px;
+  border-radius: var(--radius);
+  background: none;
+  border: none;
+  cursor: pointer;
+  transition: color var(--dur) var(--ease);
+}
+.row-strip-num:hover { color: var(--accent); }
+.row-strip-num.active { color: var(--accent-2); }
+
 
 /* ---------- Kartu poster ---------- */
 .card {

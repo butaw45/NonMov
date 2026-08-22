@@ -1,19 +1,22 @@
 import { useEffect, useState } from 'react'
 import { tmdb } from '../lib/tmdb'
-import { useWatchlist } from '../lib/watchlist'
+import { useWatchlist, toggleWatch } from '../lib/watchlist'
 import { useHistory } from '../lib/history'
 import { useTitle } from '../lib/hooks'
 import { collectSeeds, scoreRecommendations } from '../lib/recommend'
-import Hero from '../components/Hero'
+import { mediaTypeOf } from '../lib/utils'
+import HeroCard from '../components/HeroCard'
 import Row from '../components/Row'
 import ContinueRow from '../components/ContinueRow'
 import { HeroSkeleton, RowSkeleton } from '../components/Skeletons'
 import { IconAlert } from '../components/Icons'
+import { useNavigate } from 'react-router-dom'
 
 const ok = (r) => (r.status === 'fulfilled' ? r.value : null)
 
 export default function Home() {
   useTitle()
+  const nav = useNavigate()
   const [rows, setRows] = useState(null)
   const [error, setError] = useState(null)
   const [picks, setPicks] = useState(null)
@@ -116,12 +119,19 @@ export default function Home() {
   }
 
   const featured =
-    rows.trendW?.find((x) => x.backdrop_path && x.overview) || rows.trendW?.[0] || null
-  const clean = (xs) => xs?.filter((x) => x.poster_path) || []
+    rows.trendW?.find((x) => x?.backdrop_path && x?.overview) || rows.trendW?.[0] || null
+  const clean = (xs) => xs?.filter((x) => x?.poster_path) || []
 
   return (
     <>
-      {featured && <Hero item={featured} />}
+      {featured && (
+        <HeroCard
+          item={featured}
+          onWatch={() => nav(`/judul/${mediaTypeOf(featured)}/${featured.id}`)}
+          onToggle={() => toggleWatch(featured)}
+          saved={watchlist.some((x) => x.type === mediaTypeOf(featured) && x.id === featured.id)}
+        />
+      )}
       <div className="container rows">
         <ContinueRow />
         <Row kicker="Lintas tipe" title="Trending Minggu Ini" items={clean(rows.trendW)} />
