@@ -8,7 +8,7 @@ export default function Footer() {
           <div className="footer-brand">
             <Logo height={26} />
             <p>
-              Ruang rapi untuk menjelajah film &amp; series — sinopsis, cast, rating, dan daftar
+              LAYAR — katalog film &amp; series pribadi. Metadata TMDB lengkap, pemutaran
               episode lengkap. Konten yang diputar di sini hanya milik atau berlisensi resmi
               pemilik situs; judul lainnya diarahkan ke platform streaming legal.
             </p>
@@ -31,7 +31,7 @@ export default function Footer() {
           </div>
         </div>
         <div className="footer-note">
-          <span>© {new Date().getFullYear()} Seluloid. Katalog pribadi, bukan layanan streaming publik.</span>
+          <span>&copy; {new Date().getFullYear()} LAYAR. Katalog pribadi, bukan layanan streaming publik.</span>
           <span>
             This product uses the <span className="tmdb-mark">TMDB</span> API but is not endorsed or
             certified by TMDB.

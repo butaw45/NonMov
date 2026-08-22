@@ -11,6 +11,6 @@ export function useDebounce(value, delay = 400) {
 
 export function useTitle(title) {
   useEffect(() => {
-    document.title = title ? `${title} · Seluloid` : 'Seluloid — Katalog Film & Series'
+    document.title = title ? `${title} · LAYAR` : 'LAYAR — Arsip Film & Series'
   }, [title])
 }

@@ -1,37 +1,32 @@
-// Logo Seluloid: bingkai film + tombol putar, digambar sebagai SVG inline.
+// Logo LAYAR: ikon layar bioskop + wordmark.
 
 export default function Logo({ withWord = true, height = 30 }) {
   return (
     <span className="logo" style={{ display: 'inline-flex', alignItems: 'center', gap: 10 }}>
-      <svg viewBox="0 0 64 64" style={{ height, width: 'auto' }} aria-hidden="true">
+      <svg viewBox="0 0 48 48" style={{ height, width: 'auto' }} aria-hidden="true">
         <rect
-          x="7"
-          y="11"
-          width="50"
-          height="42"
-          rx="6"
-          fill="none"
-          stroke="var(--amber)"
-          strokeWidth="3.5"
+          x="4" y="8" width="40" height="28" rx="4"
+          fill="none" stroke="var(--accent)" strokeWidth="2.5"
         />
-        <circle cx="15" cy="20" r="2.2" fill="var(--amber)" />
-        <circle cx="15" cy="27.5" r="2.2" fill="var(--amber)" />
-        <circle cx="15" cy="35" r="2.2" fill="var(--amber)" />
-        <circle cx="15" cy="42.5" r="2.2" fill="var(--amber)" />
-        <path d="M26.5 23L46 32 26.5 41z" fill="var(--amber)" />
+        <line
+          x1="4" y1="26" x2="44" y2="26"
+          stroke="var(--accent)" strokeWidth="1" opacity="0.4"
+        />
+        <circle cx="16" cy="17" r="1.8" fill="var(--accent-2)" />
+        <circle cx="32" cy="17" r="1.8" fill="var(--accent-2)" />
       </svg>
       {withWord && (
         <span
           style={{
             fontFamily: 'var(--font-display)',
-            fontWeight: 900,
-            fontSize: height * 0.62,
-            letterSpacing: '0.01em',
+            fontWeight: 400,
+            fontSize: height * 0.7,
+            letterSpacing: '0.06em',
             lineHeight: 1,
             color: 'var(--ink)',
           }}
         >
-          Seluloid
+          LAYAR
         </span>
       )}
     </span>

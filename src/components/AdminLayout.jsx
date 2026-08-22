@@ -45,7 +45,7 @@ export default function AdminLayout() {
   return (
     <div className="admin-shell">
       <header className="admin-header">
-        <Link to="/admin" className="admin-brand">Seluloid Admin</Link>
+        <Link to="/admin" className="admin-brand">LAYAR Admin</Link>
         <nav>
           <Link to="/admin/settings" className="btn btn-ghost btn-sm">Pengaturan</Link>
           <Link to="/" className="btn btn-ghost btn-sm">Lihat Situs</Link>
