@@ -90,6 +90,14 @@ Dokumen PRD lengkap: `docs/prd-tmdb-netflix-clone.md`.
       jangan menebak.
    f. Catat di issue/plan jika skill tertentu digunakan.
 
+8. **Sebelum hapus export/import, selalu `lsp references`** — jangan andalkan
+   grep lokal untuk menentukan apakah symbol "dead". Grep lokal hanya melihat
+   file yang sedang diedit; `lsp references` menangkap cross-file usage
+   (re-export, shadowing, dynamic import). Insiden: 2026-08-22, `keyOf` dihapus
+   dari Browse.jsx karena grep lokal tidak menemukan penggunaan — padahal
+   dipakai di line 229 file yang sama. Pengecualian: symbol yang jelas-jelas
+   hanya digunakan dalam satu fungsi lokal (bukan export/import).
+
 ## Catatan
 
 - **Dua sistem graf — pembagian tugas:**

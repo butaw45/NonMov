@@ -1,8 +1,8 @@
-import { useEffect, useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import { useSearchParams } from 'react-router-dom'
 import { tmdb } from '../lib/tmdb'
 import { useTitle } from '../lib/hooks'
-import { cx } from '../lib/utils'
+import { cx, keyOf } from '../lib/utils'
 import { COUNTRIES, DEBOUNCE_MS, ratingParam } from '../lib/browseFilters'
 import PosterCard from '../components/PosterCard'
 import { GridSkeleton } from '../components/Skeletons'
@@ -19,6 +19,10 @@ export default function Browse() {
   const tahun = sp.get('tahun') || ''
   const rating = sp.get('rating') || ''
   const [draftRating, setDraftRating] = useState(rating)
+  // spRef: selalu merefleksikan sp terbaru — cegah stale closure di timeout debounce
+  const spRef = useRef(sp)
+  spRef.current = sp
+  const urut = sp.get('urut') || 'populer'
   const negara = sp.get('negara') || ''
 
   useTitle(tipe === 'tv' ? 'Jelajah Series' : 'Jelajah Film')
@@ -42,7 +46,7 @@ export default function Browse() {
   // Debounce: draftRating local state → URL rating (300ms) untuk cegah spam API saat drag slider
   useEffect(() => {
     const t = setTimeout(() => {
-      const next = new URLSearchParams(sp)
+      const next = new URLSearchParams(spRef.current)
       if (draftRating && draftRating !== '0') next.set('rating', draftRating)
       else next.delete('rating')
       setSp(next, { replace: true })
