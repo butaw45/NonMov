@@ -2,7 +2,8 @@ import { useEffect, useState } from 'react'
 import { useSearchParams } from 'react-router-dom'
 import { tmdb } from '../lib/tmdb'
 import { useTitle } from '../lib/hooks'
-import { cx, keyOf } from '../lib/utils'
+import { cx } from '../lib/utils'
+import { COUNTRIES, DEBOUNCE_MS, ratingParam } from '../lib/browseFilters'
 import PosterCard from '../components/PosterCard'
 import { GridSkeleton } from '../components/Skeletons'
 import { IconAlert, IconCompass } from '../components/Icons'
@@ -16,7 +17,9 @@ export default function Browse() {
   const tipe = sp.get('tipe') === 'tv' ? 'tv' : 'movie'
   const genre = sp.get('genre') || ''
   const tahun = sp.get('tahun') || ''
-  const urut = sp.get('urut') || 'populer'
+  const rating = sp.get('rating') || ''
+  const [draftRating, setDraftRating] = useState(rating)
+  const negara = sp.get('negara') || ''
 
   useTitle(tipe === 'tv' ? 'Jelajah Series' : 'Jelajah Film')
 
@@ -36,6 +39,17 @@ export default function Browse() {
     setSp(next)
   }
 
+  // Debounce: draftRating local state → URL rating (300ms) untuk cegah spam API saat drag slider
+  useEffect(() => {
+    const t = setTimeout(() => {
+      const next = new URLSearchParams(sp)
+      if (draftRating && draftRating !== '0') next.set('rating', draftRating)
+      else next.delete('rating')
+      setSp(next, { replace: true })
+    }, DEBOUNCE_MS)
+    return () => clearTimeout(t)
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [draftRating])
   useEffect(() => {
     let on = true
     tmdb.genres(tipe)
@@ -53,6 +67,14 @@ export default function Browse() {
     if (genre) out.with_genres = genre
     if (tahun) out[tipe === 'movie' ? 'primary_release_year' : 'first_air_date_year'] = tahun
     if (urut === 'rating') out['vote_count.gte'] = '200'
+    // Rating filter — passing existing vote_count.gte untuk Math.max anti-collision
+    const rp = ratingParam(rating, Number(out['vote_count.gte']))
+    if (rp) {
+      out['vote_average.gte'] = String(rp.gte)
+      out['vote_count.gte'] = String(rp.countGte)
+    }
+    // Negara filter
+    if (negara) out.with_origin_country = negara
     return out
   }
 
@@ -76,7 +98,7 @@ export default function Browse() {
       })
     return () => { on = false }
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [tipe, genre, tahun, urut])
+  }, [tipe, genre, tahun, urut, rating, negara])
 
   const loadMore = () => {
     if (loadingMore || page >= totalPages) return
@@ -125,6 +147,48 @@ export default function Browse() {
             <option value="baru">Terbaru</option>
           </select>
         </label>
+        <label className="filter-rating">
+          Minimal rating{draftRating && Number(draftRating) > 0 ? ` : ${draftRating}+` : ''}
+          <input
+            type="range" min="0" max="10" step="0.5"
+            className="field-range"
+            value={draftRating || 0}
+            onChange={(e) => setDraftRating(e.target.value)}
+            onMouseUp={() => {
+              const next = new URLSearchParams(sp)
+              if (draftRating && draftRating !== '0') next.set('rating', draftRating)
+              else next.delete('rating')
+              setSp(next, { replace: true })
+            }}
+            onTouchEnd={() => {
+              const next = new URLSearchParams(sp)
+              if (draftRating && draftRating !== '0') next.set('rating', draftRating)
+              else next.delete('rating')
+              setSp(next, { replace: true })
+            }}
+            aria-label="Rating minimum"
+            aria-valuenow={Number(draftRating || 0)}
+            aria-valuemin={0}
+            aria-valuemax={10}
+          />
+        </label>
+        <label>
+          Negara
+          <select className="field" value={negara} onChange={(e) => setParam('negara', e.target.value)}>
+            <option value="">Semua negara</option>
+            {COUNTRIES.map((c) => (
+              <option key={c.code} value={c.code}>{c.name}</option>
+            ))}
+          </select>
+        </label>
+        {(rating || negara || genre || tahun || urut !== 'populer') && (
+          <button
+            className="btn-reset"
+            onClick={() => { setSp(new URLSearchParams()); setDraftRating('') }}
+          >
+            Setel ulang
+          </button>
+        )}
       </div>
 
       {genres.length > 0 && (

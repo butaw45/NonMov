@@ -41,6 +41,33 @@
   letter-spacing: 0.08em;
 }
 
+/* Filter rating slider */
+.browse-bar label.filter-rating {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  max-width: 240px;
+}
+.field-range {
+  width: 120px;
+  accent-color: var(--amber);
+  cursor: pointer;
+  vertical-align: middle;
+}
+
+/* Tombol reset filter */
+.btn-reset {
+  padding: 4px 12px;
+  font-size: 0.85rem;
+  border-radius: var(--radius);
+  border: 1px solid var(--line);
+  background: transparent;
+  cursor: pointer;
+  white-space: nowrap;
+  color: var(--ink);
+}
+.btn-reset:hover { background: var(--panel-2); }
+
 .genre-chips { display: flex; flex-wrap: wrap; gap: 8px; margin-bottom: 30px; }
 .genre-chip {
   padding: 6px 14px;
