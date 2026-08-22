@@ -1,7 +1,9 @@
 import { useEffect, useState } from 'react'
 import { tmdb } from '../lib/tmdb'
 import { useWatchlist } from '../lib/watchlist'
+import { useHistory } from '../lib/history'
 import { useTitle } from '../lib/hooks'
+import { collectSeeds, scoreRecommendations } from '../lib/recommend'
 import Hero from '../components/Hero'
 import Row from '../components/Row'
 import ContinueRow from '../components/ContinueRow'
@@ -15,7 +17,9 @@ export default function Home() {
   const [rows, setRows] = useState(null)
   const [error, setError] = useState(null)
   const [picks, setPicks] = useState(null)
+  const [picksLoading, setPicksLoading] = useState(false)
   const watchlist = useWatchlist()
+  const history = useHistory()
 
   useEffect(() => {
     let alive = true
@@ -53,24 +57,35 @@ export default function Home() {
     }
   }, [])
 
-  // Sentuhan personal (P1 PRD): rekomendasi dari judul pertama yang disimpan.
+
+  // Rekomendasi personalisasi multi-seed: gabungan watchlist + history
   useEffect(() => {
-    if (!watchlist.length) {
-      setPicks(null)
-      return
-    }
-    const seed = watchlist[0]
+    const seeds = collectSeeds(watchlist, history, 3)
+    if (!seeds.length) { setPicks(null); setPicksLoading(false); return }
+    setPicksLoading(true)
     let alive = true
-    tmdb
-      .recommendations(seed.type, seed.id)
-      .then((d) => {
-        if (alive) setPicks({ seed: seed.title, items: d.results?.filter((x) => x.poster_path) || [] })
+    const exclude = new Set([
+      ...watchlist.map((x) => `${x.type}:${x.id}`),
+      ...history.map((x) => `${x.type}:${x.id}`),
+    ])
+    Promise.allSettled(seeds.map((s) => tmdb.recommendations(s.type, s.id)))
+      .then(async (settled) => {
+        if (!alive) return
+        const seedResults = settled
+          .map((r, i) => (r.status === 'fulfilled' ? { seed: seeds[i], results: r.value?.results } : null))
+          .filter(Boolean)
+        let items = scoreRecommendations(seedResults, exclude, 20)
+        // Fallback: jika hasil kosong/gagal semua, pakai trending
+        if (!items.length) {
+          const trendRes = await tmdb.trending('week').catch(() => null)
+          if (trendRes?.results?.length) {
+            items = trendRes.results.filter((x) => x.poster_path).slice(0, 20)
+          }
+        }
+        if (alive) { setPicks(items.length ? items : null); setPicksLoading(false) }
       })
-      .catch(() => {})
-    return () => {
-      alive = false
-    }
-  }, [watchlist])
+    return () => { alive = false; setPicksLoading(false) }
+  }, [watchlist, history])
 
   if (error) {
     return (
@@ -111,9 +126,8 @@ export default function Home() {
         <ContinueRow />
         <Row kicker="Lintas tipe" title="Trending Minggu Ini" items={clean(rows.trendW)} />
         <Row kicker="Pilihan penonton" title="Top 10 Hari Ini" items={clean(rows.top10)} numbered />
-        {picks && picks.items.length > 0 && (
-          <Row kicker={`Karena kamu menyimpan “${picks.seed}”`} title="Dipilih untuk Kamu" items={picks.items} />
-        )}
+        {picksLoading && <RowSkeleton />}
+        {picks && !picksLoading && <Row kicker="Dipersonalisasi" title="Rekomendasi untukmu" items={picks} />}
         <Row kicker="Layar lebar" title="Film Populer" items={clean(rows.movPop)} />
         <Row kicker="Binge-worthy" title="Series Populer" items={clean(rows.tvPop)} />
         <Row kicker="Uji nyali" title="Horor Pilihan" items={clean(rows.horor)} />
