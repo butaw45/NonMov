@@ -35,7 +35,7 @@
   --danger: #b0473c;        /* merah bata (error, hapus) — bukan merah Netflix */
 
   /* ---------- Tipografi ---------- */
-  --font-display: "Space Grotesk", system-ui, sans-serif;
+  --font-display: "DM Serif Display", Georgia, serif;
   --font-ui: "Inter", system-ui, -apple-system, "Segoe UI", sans-serif;
   --font-mono: "IBM Plex Mono", ui-monospace, "SF Mono", monospace;
 

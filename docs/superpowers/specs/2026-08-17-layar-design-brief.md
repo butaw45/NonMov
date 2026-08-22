@@ -23,13 +23,16 @@
 
 > Tidak ada merah Netflix (`#e50914`), tidak ada amber proyektor (`#e9b458`).
 
-## 3) Tipografi (3 wajah, bukan Fraunces+Manrope)
+## 3) Tipografi (3 wajah)
 
 | Peran | Typeface | Fallback | Pemakaian |
 |-------|----------|----------|-----------|
-| Display | **Space Grotesk** | system-ui | judul besar, nomor katalog, heading section |
+| Display | **DM Serif Display** | Georgia, serif | judul hero, heading section, nomor katalog |
 | Body/UI | **Inter** | system-ui | teks, tombol, metadata, navigasi |
-| Data/Mono | **IBM Plex Mono** | monospace | nomor katalog, durasi, rating, tahun, kode |
+| Data/Mono | **IBM Plex Mono** | monospace | nomor katalog, durasi, rating, kode |
+
+**Type scale (6 langkah):** `12, 14, 16, 20, 28, 40` (px) — konsisten di semua halaman.
+
 
 **Type scale (6 langkah):** `12, 14, 16, 20, 28, 40` (px) — konsisten di semua halaman.
 
@@ -44,13 +47,13 @@
 ## 5) Signature element (satu, diingat)
 
 **"Nomor Katalog + Strip Arsip"** — setiap judul punya nomor urut (`NO. 00124`) yang muncul di hero, kartu, dan detail; strip horizontal dengan nomor urut (bukan panah) untuk navigasi row. Ini membuat LAYAR terasa seperti *katalog yang dikurasi*, bukan *feed tak berujung*.
-
-## 6) Prinsip clean code
+## 6) Prinsip clean code (ponytail — simplified)
 
 - **Satu sumber kebenaran**: `tokens.css` (warna, type, spacing) — tidak ada nilai hardcode di komponen.
-- **Presentational vs container**: komponen UI murni (props masuk, render keluar); halaman yang atur data.
+- **Rename di tempat**: `Navbar.jsx` → `TopBar.jsx`, `Hero.jsx` → `HeroCard.jsx`. Tetap di `components/`, import relatif `./` tidak berubah.
+- **CSS merge, bukan split**: 7 file → 4 file (`tokens.css`, `base.css`, `components.css`, `layout.css` + `pages.css` halaman unik).
+- **Skip deep module palsu**: `tmdb.js` sudah cukup — tidak butuh `lib/catalog.js` wrapper. `utils.js` sudah punya `titleOf`, `yearOf`, `ratingOf` — tinggal tambah `catalogNo()`.
 - **Nama kelas konsisten**: `.btn`, `.card`, `.kicker`, `.row` — tanpa override berantai.
-- **Struktur folder**: `components/ui|layout|media`, `pages/`, `lib/`, `styles/tokens|base|primitives|layout|pages`.
 
 ## 7) Non-goals (fase ini)
 

@@ -1,185 +1,116 @@
-# LAYAR — Restructure Plan (file-by-file) + Clean Code
+# LAYAR — Restructure Plan (ponytail — simplified)
 
 > **Status: DESIGN/REVIEW ONLY — BELUM DIIMPLEMENTASI.**
-> Rencana restruktur struktur folder, pemisahan presentational/container, dan clean code.
-> Mengikuti `codebase-design` (deep module, seam, interface) dan prinsip "satu sumber kebenaran".
+> Rencana restruktur + clean code. Revisi dari versi sebelumnya: rename di tempat (bukan subfolder), CSS merge (bukan split), skip deep module palsu.
 
-## 1) Struktur folder baru
-
-```
-src/
-  components/
-    ui/            # presentational murni (props masuk, render keluar)
-      Button.jsx
-      Input.jsx
-      Select.jsx
-      Chip.jsx
-      Kicker.jsx   # eyebrow "NO. xxxxx · LABEL"
-      Badge.jsx
-      Card.jsx     # kerangka kartu (poster + caption)
-    layout/        # struktur halaman
-      TopBar.jsx   # ganti Navbar (solid, bukan mengambang)
-      BottomNav.jsx
-      Footer.jsx
-      Row.jsx      # strip arsip (nomor urut, bukan panah)
-      Grid.jsx     # grid 12 kolom
-    media/         # komponen media (poster, backdrop, hero)
-      PosterCard.jsx
-      HeroCard.jsx
-      Backdrop.jsx
-  pages/           # container (fetch data, atur state, pass props)
-    Home.jsx
-    Browse.jsx
-    Detail.jsx
-    Watch.jsx
-    Search.jsx
-    Watchlist.jsx
-    NotFound.jsx
-    Admin/
-      AdminLayout.jsx
-      AdminLogin.jsx
-      Admin.jsx
-      AdminEntry.jsx
-      AdminSettings.jsx
-  lib/             # data & utilitas murni (tanpa React)
-    catalog.js     # akses data TMDB + backend
-    format.js      # judul, tahun, rating, durasi, nomor katalog
-    tmdb.js        # klien TMDB (endpoint + cache)
-    api.js         # klien admin API
-    tokens.js      # konstanta warna/spacing untuk JS (jika perlu)
-    watchlist.js
-    history.js
-    hooks.js
-    utils.js
-  styles/
-    tokens.css     # satu sumber kebenaran (warna, type, spacing)
-    base.css       # reset, body, focus, scrollbar, selection
-    primitives.css # .btn, .field, .card, .chip, .kicker (satu definisi)
-    layout.css     # .container, .page-pad, .grid, .row, .topbar
-    pages/
-      home.css
-      browse.css
-      detail.css
-      watch.css
-      admin.css
-```
-
-## 2) Pemetaan perubahan (file lama -> baru)
+## 1) Perubahan file (rename di tempat)
 
 | File lama | File baru | Perubahan |
 |-----------|-----------|-----------|
-| `src/components/Navbar.jsx` | `src/components/layout/TopBar.jsx` | solid, bukan mengambang; props `active` eksplisit |
-| `src/components/Hero.jsx` | `src/components/media/HeroCard.jsx` | terima `item`, `onWatch`, `onToggle` (tanpa `Link`/`useWatchlist`) |
-| `src/components/Row.jsx` | `src/components/layout/Row.jsx` | strip arsip (nomor urut), bukan panah bulat |
-| `src/components/PosterCard.jsx` | `src/components/media/PosterCard.jsx` | terima `item`, `saved`, `onToggle` sebagai props |
-| `src/components/ContinueRow.jsx` | `src/components/layout/ContinueRow.jsx` | tetap, tapi pakai `Card` + `Kicker` dari ui/ |
-| `src/components/BottomNav.jsx` | `src/components/layout/BottomNav.jsx` | tetap, pakai token baru |
-| `src/components/Footer.jsx` | `src/components/layout/Footer.jsx` | tetap, pakai token baru |
-| `src/components/Icons.jsx` | `src/components/ui/Icons.jsx` | tetap, tambah ikon baru jika perlu |
-| `src/components/Logo.jsx` | `src/components/ui/Logo.jsx` | ganti wordmark jadi "LAYAR" |
-| `src/components/Skeletons.jsx` | `src/components/ui/Skeletons.jsx` | tetap, pakai token baru |
-| `src/components/ErrorBoundary.jsx` | `src/components/ui/ErrorBoundary.jsx` | tetap |
-| `src/components/AdminLayout.jsx` | `src/pages/Admin/AdminLayout.jsx` | pindah ke pages/Admin |
-| `src/pages/Admin*.jsx` | `src/pages/Admin/Admin*.jsx` | pindah ke subfolder Admin |
-| `src/styles/tokens.css` | `src/styles/tokens.css` | ganti isi (palet + type + spacing baru) |
-| `src/styles/layout.css` | `src/styles/layout.css` | .topbar, .grid, .row, .container |
-| `src/styles/components.css` | `src/styles/primitives.css` | .btn, .field, .card, .chip, .kicker |
-| `src/styles/pages*.css` | `src/styles/pages/*.css` | pecah per halaman yang benar-benar unik |
+| `src/components/Navbar.jsx` | `src/components/TopBar.jsx` | solid, bukan mengambang; props `active` eksplisit |
+| `src/components/Hero.jsx` | `src/components/HeroCard.jsx` | terima `item`, `onWatch`, `onToggle` (tanpa `Link`/`useWatchlist`) |
+| `src/components/ContinueRow.jsx` | tetap | pakai `PosterCard` presentational |
+| `src/components/Row.jsx` | tetap | strip arsip (nomor urut), bukan panah bulat |
+| `src/components/PosterCard.jsx` | tetap | terima `item`, `saved`, `onToggle` sebagai props |
+| `src/components/BottomNav.jsx` | tetap | pakai token baru |
+| `src/components/Footer.jsx` | tetap | branding "LAYAR" |
+| `src/components/Icons.jsx` | tetap | tambah ikon jika perlu |
+| `src/components/Logo.jsx` | tetap | ganti wordmark jadi "LAYAR", ganti logo SVG |
+| `src/components/Skeletons.jsx` | tetap | pakai token baru |
+| `src/components/ErrorBoundary.jsx` | tetap | tidak berubah |
+| `src/components/AdminLayout.jsx` | `src/pages/AdminLayout.jsx` | pindah ke pages (dia container, bukan komponen) |
+| `src/pages/Admin*.jsx` | `src/pages/Admin/*.jsx` | pindah ke subfolder Admin |
 
-## 3) Clean code (per codebase-design)
+**Import path yang berubah:**
+- `App.jsx`: `./components/Navbar` → `./components/TopBar`, `./components/Hero` → `./components/HeroCard`
+- `AdminLayout.jsx` consumer: `../components/AdminLayout` → `./AdminLayout`
+- Semua import relatif `./` antar komponen TIDAK berubah.
 
-### Prinsip
-- **Deep module**: `lib/catalog.js` menyembunyikan kompleksitas TMDB + backend di balik interface kecil (`getHome()`, `getDetail(type,id)`, `search(q)`).
-- **Seam**: interface `catalog.js` adalah seam; adapter = klien TMDB langsung vs proxy backend.
-- **Presentational vs container**: komponen di `components/ui|layout|media` murni presentational (props masuk, render keluar); `pages/` adalah container yang fetch data dan pass props.
+## 2) CSS merge (7 → 4 file)
 
-### Contoh perubahan interface
+| Sebelum | Sesudah | Isi |
+|---------|---------|-----|
+| `tokens.css` | `tokens.css` | HANYA variabel CSS + reset minimal. Type scale, spacing, warna — tidak ada class selector. |
+| (baru) | `base.css` | Reset body, html, focus, scrollbar, selection — dipisah dari tokens agar tokens murni variabel. |
+| `components.css` | `components.css` | Merge `components-ui.css` ke sini. Semua .btn, .card, .kicker, .chip — satu definisi. |
+| `layout.css` | `layout.css` | .topbar, .grid, .strip, .container, .bottomnav, .footer |
+| `pages.css` | `pages.css` | Tetap, halaman yang benar-benar unik |
+| `pages-misc.css` | merge ke `pages.css` | Satu file untuk semua page style |
+| `pages-detail.css` | merge ke `pages.css` | Satu file untuk semua page style |
+| `components-ui.css` | merge ke `components.css` | Tidak perlu file terpisah |
 
-**Sebelum (PosterCard):**
+## 3) Clean code (yang di-skip)
+
+| Rencana lama | Keputusan | Alasan |
+|---|---|---|
+| `lib/catalog.js` deep module | **Skip** — `tmdb.js` sudah cukup | 1 wrapper dengan 1 implementasi bukan deep module. Pages panggil `tmdb.js` langsung. |
+| `lib/format.js` file baru | **Skip** — `utils.js` sudah punya 6/7 fungsi | Tinggal tambah `catalogNo()` ke `utils.js`. 1 file, bukan 2. |
+| `components/ui/`, `layout/`, `media/` subfolder | **Skip** — rename di tempat | 12 rename + semua import path berubah vs 6 rename tanpa import break. |
+
+## 4) Interface final (presentational vs container)
+
+### PosterCard (presentational murni)
 ```jsx
-// komponen tahu tentang watchlist + routing
-export default function PosterCard({ item }) {
-  const list = useWatchlist()
-  const saved = list.some((x) => x.type === type && x.id === item.id)
-  return <Link className="card" to={`/judul/${type}/${item.id}`}>...</Link>
-}
-```
-
-**Sesudah (PosterCard):**
-```jsx
-// presentational murni: props masuk, render keluar
+// props masuk, render keluar — tidak tahu watchlist, tidak tahu routing
 export default function PosterCard({ item, saved, onToggle }) {
   return (
-    <Card as="a" href={`/judul/${type}/${item.id}`}>
-      <Card.Poster src={poster} alt={title} />
-      <Card.Caption title={title} meta={meta} />
-      <Card.Chip saved={saved} onToggle={onToggle} />
-    </Card>
+    <Link className="card" to={`/judul/${mediaTypeOf(item)}/${item.id}`}>
+      {/* poster + caption */}
+      <button className="card-save" onClick={(e) => { e.preventDefault(); onToggle(item) }}>
+        {saved ? '✓ Tersimpan' : '+ Simpan'}
+      </button>
+    </Link>
   )
 }
 ```
 
-**Sebelum (Hero):**
+### HeroCard (presentational murni)
 ```jsx
-// komponen tahu tentang routing + watchlist
-export default function Hero({ item }) {
-  const list = useWatchlist()
-  return <section>...</section>
-}
-```
-
-**Sesudah (HeroCard):**
-```jsx
-// presentational murni
 export default function HeroCard({ item, onWatch, onToggle, saved }) {
   return (
     <section className="hero">
-      <Backdrop src={backdrop} />
-      <Kicker no="00124" label="Arsip Minggu Ini" />
-      <h1 className="hero-title">{title}</h1>
-      <p className="hero-meta">{meta}</p>
-      <Button variant="primary" onClick={onWatch}>Tonton</Button>
-      <Button variant="ghost" onClick={onToggle}>{saved ? 'Tersimpan' : 'Simpan'}</Button>
+      <div className="hero-bg"><img src={backdrop} alt="" /></div>
+      <div className="hero-content">
+        <p className="kicker">{catalogNo(item.id)} · ARSIP MINGGU INI</p>
+        <h1 className="hero-title">{titleOf(item)}</h1>
+        <p className="hero-meta">{ratingOf(item)} · {yearOf(item)} · {runtimeLabel(runtime)}</p>
+        <button className="btn btn-primary" onClick={onWatch}>Tonton</button>
+        <button className="btn btn-ghost" onClick={() => onToggle(item)}>
+          {saved ? 'Tersimpan' : 'Simpan'}
+        </button>
+      </div>
     </section>
   )
 }
 ```
 
-### Interface `lib/catalog.js` (deep module)
-
-```js
-// Interface kecil, implementasi dalam (TMDB + backend + cache)
-export async function getHome() { /* ... */ }
-export async function getDetail(type, id) { /* ... */ }
-export async function search(q, page = 1) { /* ... */ }
-export async function browse(params) { /* ... */ }
+### TopBar (solid, bukan Navbar mengambang)
+```jsx
+// Tidak ada useState scrolled, tidak ada useEffect scroll — selalu solid
+export default function TopBar() {
+  return (
+    <header className="topbar">
+      <div className="topbar-inner">
+        <Link to="/" className="topbar-brand"><Logo /></Link>
+        <nav className="topbar-links">...</nav>
+        <form className="topbar-search">...</form>
+        <Link to="/watchlist" className="topbar-action">Daftar Saya</Link>
+      </div>
+    </header>
+  )
+}
 ```
 
-### Interface `lib/format.js` (util murni)
+## 5) Langkah migrasi (3 PR bertahap)
 
-```js
-export function titleOf(item) { /* ... */ }
-export function yearOf(item) { /* ... */ }
-export function ratingOf(item) { /* ... */ }
-export function catalogNo(id) { return `NO. ${String(id).padStart(5, '0')}` }
-export function runtimeLabel(mins) { /* ... */ }
-```
+| PR | Lingkup | File |
+|----|---------|------|
+| **PR 1: Tokens + Brand** | `tokens.css` baru, `base.css` baru, Google Fonts, `Logo.jsx`, `index.html`, `Footer.jsx` | 5 file |
+| **PR 2: Komponen** | `Navbar→TopBar`, `Hero→HeroCard`, `Row` strip arsip, `PosterCard` props, `Kicker` | ~6 file |
+| **PR 3: CSS Merge + Clean** | Merge CSS, rename classes, pages ikut tokens, `AdminLayout→pages/`, `utils.js +catalogNo` | ~8 file |
 
-## 4) Langkah migrasi (urutan aman)
-
-1. **Tokens dulu**: ganti `tokens.css` (palet + type + spacing baru) — semua komponen ikut berubah.
-2. **Primitives**: buat `primitives.css` (.btn, .field, .card, .chip, .kicker) — satu definisi.
-3. **Layout**: buat `layout.css` (.topbar, .grid, .row, .container).
-4. **Komponen ui/**: buat Button, Input, Select, Chip, Kicker, Card — migrasi dari komponen lama.
-5. **Komponen layout/**: TopBar, Row, Grid, Footer, BottomNav.
-6. **Komponen media/**: PosterCard, HeroCard, Backdrop.
-7. **Pages**: ubah jadi container (fetch data, pass props) — tanpa styling inline.
-8. **Lib**: pisahkan `catalog.js` (data) dari `format.js` (presentasi).
-9. **Admin**: pindah ke `pages/Admin/` — tidak ikut rebrand visual (tetap fungsional).
-
-## 5) Non-goals (fase ini)
+## 6) Non-goals
 
 - Bukan mengubah alur data TMDB / admin API.
-- Bukan menambah fitur baru (#23, #24 tetap terpisah).
+- Bukan menambah fitur baru (#23, #24 sudah selesai).
 - Bukan mengubah backend / server.
-- Bukan implementasi — hanya desain + rencana.
