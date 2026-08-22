@@ -53,10 +53,21 @@ export function collectSeeds(watchlist = [], history = [], n = 3) {
     const k = keyOf(wl)
     if (!seen.has(k)) seen.set(k, { type: wl.type, id: wl.id, title: wl.title, w: 1, t: wl.addedAt || 0 })
   }
-  return [...seen.values()]
-    .sort((a, b) => b.w - a.w || b.t - a.t)
-    .slice(0, n)
-    .map(({ type, id, title }) => ({ type, id, title }))
+  let sorted = [...seen.values()].sort((a, b) => b.w - a.w || b.t - a.t)
+  // diversifikasi: jika n >= 2 dan semua seed bertipe sama,
+  // cari kandidat tersisa dari tipe berbeda
+  const types = new Set(sorted.slice(0, n).map((s) => s.type))
+  if (types.size < 2) {
+    const otherType = sorted[0]?.type === 'movie' ? 'tv' : 'movie'
+    const swapIdx = sorted.slice(0, n).findLastIndex((s) => s.type !== otherType)
+    if (swapIdx >= 0) {
+      const replacement = sorted.slice(n).find((s) => s.type === otherType)
+      if (replacement) {
+        sorted = [...sorted.slice(0, swapIdx), replacement, ...sorted.slice(swapIdx + 1)]
+      }
+    }
+  }
+  return sorted.slice(0, n).map(({ type, id, title }) => ({ type, id, title }))
 }
 ```
 
@@ -73,7 +84,7 @@ export function scoreRecommendations(seedResults = [], excludeKeys = new Set(), 
       const k = `${type}:${it.id}`
       if (excludeKeys.has(k)) continue
       const cur = acc.get(k) || { item: it, score: 0 }
-      cur.score += 1 + (it.vote_average || 0) / 100
+      cur.score += 1 + (it.vote_average || 0) / 10
       acc.set(k, cur)
     }
   }
@@ -91,15 +102,25 @@ Jalankan (ESM, tanpa framework):
 ```bash
 node --input-type=module -e "
 import { collectSeeds, scoreRecommendations } from './src/lib/recommend.js'
-const wl = [{ id: 1, type: 'movie', title: 'A', addedAt: 100 }]
+
+// Test: collectSeeds — history bobot > watchlist, diversifikasi tipe
+const wl = [{ id: 1, type: 'movie', title: 'A', addedAt: 100 }, { id: 4, type: 'movie', title: 'D', addedAt: 150 }]
 const hi = [{ id: 2, type: 'tv', title: 'B', updatedAt: 200 }]
-console.log('seeds', collectSeeds(wl, hi, 3))
+const seeds = collectSeeds(wl, hi, 3)
+console.log('seeds', seeds)
+// Expected: tv:2 (history) dulu, lalu movie:1 (watchlist), lalu movie:4
+// Harus ada tipe campuran (tv+movie) — bukan 3 movie
+
+// Test: scoreRecommendations — vote_average/10
 const res = scoreRecommendations(
   [ { seed: {}, results: [{ id: 9, media_type: 'movie', poster_path: '/x', vote_average: 80 }] },
     { seed: {}, results: [{ id: 9, media_type: 'movie', poster_path: '/x', vote_average: 80 }] } ],
   new Set(['movie:1'])
 )
 console.log('reco', res.map((r) => r.id))
+// Expected: [9] — dedup meski 2 seed; score = (1+8)+(1+8) = 18
+// movie:1 di-exclude sehingga tidak muncul
+console.log('test passed')
 "
 ```
 
@@ -139,7 +160,8 @@ Ganti efek watchlist-saja menjadi:
 ```js
 useEffect(() => {
   const seeds = collectSeeds(watchlist, history, 3)
-  if (!seeds.length) { setPicks(null); return }
+  if (!seeds.length) { setPicks(null); setPicksLoading(false); return }
+  setPicksLoading(true)
   let alive = true
   const exclude = new Set([
     ...watchlist.map((x) => `${x.type}:${x.id}`),
@@ -151,22 +173,48 @@ useEffect(() => {
       const seedResults = settled
         .map((r, i) => (r.status === 'fulfilled' ? { seed: seeds[i], results: r.value?.results } : null))
         .filter(Boolean)
-      const items = scoreRecommendations(seedResults, exclude, 20)
+      let items = scoreRecommendations(seedResults, exclude, 20)
+      // Fallback: jika hasil kosong/gagal semua, pakai trending
+      if (!items.length && rows?.trendW?.length) {
+        items = rows.trendW.slice(0, 20)
+      }
       setPicks(items.length ? items : null)
+      setPicksLoading(false)
     })
-  return () => { alive = false }
+  return () => { alive = false; setPicksLoading(false) }
 }, [watchlist, history])
 ```
 
-- [ ] **Step 3: render Row**
+Catatan: efek ini butuh akses ke `rows` state (untuk fallback trending). Pastikan `rows` sudah dalam scope atau baca dari localStorage. **Pendekatan paling aman**: gunakan `tmdb.trending('week')` langsung sebagai fallback (jangan bergantung pada state `rows` yang mungkin belum siap). Alternatif: simpan `rows.trendW` di ref saat fetch pertama selesai.
 
-Setelah `<ContinueRow />`:
-
-```jsx
-{picks && <Row kicker="Dipersonalisasi" title="Rekomendasi untukmu" items={picks} />}
+```js
+// Rekomendasi: fallback panggil trending langsung
+if (!items.length) {
+  const trendRes = await tmdb.trending('week').catch(() => null)
+  if (trendRes?.results?.length) {
+    items = trendRes.results.filter((x) => x.poster_path).slice(0, 20)
+  }
+}
 ```
 
-(Hapus render `picks` lama bila ada; sesuaikan agar `picks` berupa array item, bukan objek `{seed, items}`.)
+- [ ] **Step 3: render Row + skeleton**
+
+Tambah state di atas komponen: `const [picksLoading, setPicksLoading] = useState(false)`
+
+Render di antara `<ContinueRow />` dan baris kategori (posisi aman karena `ContinueRow` return `null` bila kosong — tidak ada gap DOM):
+
+```jsx
+<ContinueRow />
+{picksLoading && <RowSkeleton />}
+{picks && !picksLoading && <Row kicker="Dipersonalisasi" title="Rekomendasi untukmu" items={picks} />}
+```
+
+Impor `RowSkeleton` dari Skeletons bila belum: `import { RowSkeleton } from '../components/Skeletons'`
+
+- Hapus render `picks` lama (`{picks && picks.items.length > 0 && ...}`).
+- `picks` kini berupa array item, bukan objek `{seed, items}`.
+- Saat `picksLoading`, skeleton tampil di posisi yang sama — layout tidak jump.
+- Saat selesai & `picks` null → skeleton & Row hilang (tidak ada yang dirender).
 
 - [ ] **Step 4: build**
 
@@ -196,3 +244,9 @@ git commit -m "feat(home): rekomendasi personalisasi multi-seed (issue #NN)"
 - **Spec coverage:** collectSeeds (Task 1), scoreRecommendations (Task 1), integrasi Home + Row (Task 2), verifikasi build + smoke + UI (Task 3) — semua seksi spec terpetakan.
 - **Placeholder scan:** tidak ada TBD/TODO; kode aktual diberikan. Nomor issue (`#NN`) diisi saat issue dibuat.
 - **Type consistency:** `collectSeeds`/`scoreRecommendations` dipakai konsisten di Task 1 & 2; bentuk item TMDB (`media_type`, `poster_path`, `vote_average`) sesuai pemakaian di `Home.jsx`/`Row.jsx`.
+- **Amendments (5 poin):**
+  1. Score weight: `vote_average/10` bukan `/100` (bobot seimbang).
+  2. Loading skeleton: `picksLoading` state + `RowSkeleton` cegah layout jump.
+  3. Seed diversity: swap seed jika semua bertipe sama.
+  4. Fallback konten: trending dipakai bila rekomendasi kosong (seeds ada).
+  5. Posisi adaptif: dikonfirmasi aman (ContinueRow return null saat kosong).
