@@ -1,7 +1,7 @@
-import { Link } from 'react-router-dom'
 import { img } from '../lib/tmdb'
-import { titleOf, yearOf, mediaTypeOf, ratingOf, catalogNo } from '../lib/utils'
+import { titleOf, yearOf, mediaTypeOf, ratingOf } from '../lib/utils'
 import { IconPlay, IconPlus, IconCheck, IconStar } from './Icons'
+import Kicker from './Kicker'
 
 // Presentasional murni — tidak ada useWatchlist, toggleWatch, atau Link internal.
 export default function HeroCard({ item, onWatch, onToggle, saved }) {
@@ -18,7 +18,7 @@ export default function HeroCard({ item, onWatch, onToggle, saved }) {
         </div>
       )}
       <div className="hero-content">
-        <p className="kicker">{catalogNo(item.id)} · ARSIP MINGGU INI</p>
+        <Kicker no={item.id} label="ARSIP MINGGU INI" />
         <h1 className="hero-title">{title}</h1>
         <div className="hero-meta">
           {rating && <span className="star"><IconStar size={15} />{rating}</span>}
