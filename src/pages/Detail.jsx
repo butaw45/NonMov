@@ -169,7 +169,7 @@ const history = useHistory()
               {(() => {
                 let watchHref = `/tonton/${kind}/${id}`
                 if (kind === 'tv') {
-                  const h = history.find((e) => e.type === 'tv' && e.id === Number(id))
+                  const h = history.find((e) => e.type === 'tv' && e.id === id)
                   if (h && h.season != null && h.episode != null) {
                     watchHref = `/tonton/tv/${id}?season=${h.season}&episode=${h.episode}`
                   }

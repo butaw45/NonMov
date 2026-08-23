@@ -126,6 +126,7 @@ router.put('/entries/:id', protectRoute, (req, res) => {
 router.delete('/entries/:id', protectRoute, (req, res) => {
   const ok = deleteEntry(req.params.id)
   if (!ok) return res.status(404).json({ status_message: 'Entry tidak ditemukan' })
+  res.json({ ok: true })
 })
 
 // ---- Config global --------------------------------------------------

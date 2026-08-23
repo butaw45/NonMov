@@ -79,7 +79,7 @@
   transition: all 0.15s ease;
 }
 .genre-chip:hover { border-color: var(--line-strong); color: var(--ink); }
-.genre-chip.on { border-color: var(--amber); background: rgba(233, 180, 88, 0.12); color: var(--amber-hi); }
+.genre-chip.on { border-color: var(--amber); background: rgba(212, 160, 23, 0.12); color: var(--amber-hi); }
 
 .load-more { display: flex; justify-content: center; margin-top: 40px; }
 
@@ -576,7 +576,7 @@
   color: var(--ink-dim);
 }
 .badge-published { background: rgba(74, 140, 92, 0.18); border-color: rgba(74, 140, 92, 0.5); color: var(--badge-ok); }
-.badge-draft { background: rgba(233, 180, 88, 0.12); border-color: rgba(233, 180, 88, 0.4); color: var(--amber-hi); }
+.badge-draft { background: rgba(212, 160, 23, 0.12); border-color: rgba(212, 160, 23, 0.4); color: var(--amber-hi); }
 
 .btn-danger:hover { border-color: var(--velvet); color: var(--danger-ink); }
 
