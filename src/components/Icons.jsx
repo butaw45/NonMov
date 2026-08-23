@@ -1,3 +1,4 @@
+import React from 'react'
 // Ikon SVG digambar tangan — stroke konsisten 1.8, tanpa library ikon.
 
 const base = {

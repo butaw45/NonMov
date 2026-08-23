@@ -143,6 +143,7 @@ if (existsSync(DIST)) {
   })
 }
 
+export { app }
 app.listen(PORT, () => {
   console.log(`[seluloid] backend di http://localhost:${PORT}`)
   console.log('[seluloid] TMDB proxy   : /3/*')
