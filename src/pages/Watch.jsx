@@ -1,7 +1,5 @@
 import { useEffect, useRef, useState } from 'react'
 import { Link, useParams, useSearchParams } from 'react-router-dom'
-import Artplayer from 'artplayer'
-import Hls from 'hls.js'
 import { tmdb, img, pickProviders, catalogLookup, fetchConfig } from '../lib/tmdb'
 import { useTitle } from '../lib/hooks'
 import { runtimeLabel } from '../lib/utils'
@@ -130,48 +128,14 @@ export default function Watch() {
     // Self embed dirender sebagai iframe, bukan ArtPlayer
     if (active?.type === 'self' && active?.video_type === 'embed') return
     if (!src || !videoRef.current) return
-    const isHls = /\.m3u8($|\?)/i.test(src)
-    const art = new Artplayer({
-      container: videoRef.current,
-      url: src,
-      type: isHls ? 'm3u8' : '',
-      autoplay: true,
-      muted: true,
-      setting: true,
-      pip: true,
-      fullscreenWeb: true,
-      customType: {
-        m3u8: (video, url, artInstance) => {
-          if (Hls.isSupported()) {
-            if (artInstance.hls) artInstance.hls.destroy()
-            const hls = new Hls()
-            hls.loadSource(url)
-            hls.attachMedia(video)
-            artInstance.hls = hls
-            artInstance.on('destroy', () => hls.destroy())
-          } else if (video.canPlayType('application/vnd.apple.mpegurl')) {
-            video.src = url
-          } else {
-            artInstance.notice.show = 'Format HLS tidak didukung browser ini'
-          }
-        },
-      },
-    })
 
-    // Lanjutkan Menonton: seek ke posisi tersimpan (untuk TV hanya bila season &
-    // episode cocok), rekam progres berkala, hapus entri saat selesai, flush saat keluar.
-    const start = restorePosition(kind, id, season, episode)
-    if (start > 0) {
-      art.on('ready', () => {
-        art.currentTime = start
-      })
-    }
-
+    let artInstance = null
+    let cancelled = false
     let ended = false
     let lastSave = 0
     const save = () => {
       const d = detailRef.current
-      if (!d || !art.duration) return
+      if (!d || !artInstance?.duration) return
       lastSave = Date.now()
       upsertProgress({
         type: kind,
@@ -179,22 +143,72 @@ export default function Watch() {
         title: d.title || d.name,
         poster_path: d.poster_path || null,
         ...(kind === 'tv' ? epRef.current : {}),
-        pos: art.currentTime,
-        dur: art.duration,
+        pos: artInstance.currentTime,
+        dur: artInstance.duration,
       })
     }
-    // ArtPlayer mem-proxy event media dengan prefix "video:" (tidak ada "timeupdate"/"ended" polos)
-    art.on('video:timeupdate', () => {
-      if (Date.now() - lastSave >= 5000) save()
-    })
-    art.on('video:ended', () => {
-      ended = true
-      removeHistory(kind, id)
-    })
+
+    ;(async () => {
+      const [ArtplayerModule, HlsModule] = await Promise.all([
+        import('artplayer'),
+        import('hls.js'),
+      ])
+      const Artplayer = ArtplayerModule.default
+      const Hls = HlsModule.default
+
+      if (cancelled) return
+
+      const isHls = /\.m3u8($|\?)/i.test(src)
+      const art = new Artplayer({
+        container: videoRef.current,
+        url: src,
+        type: isHls ? 'm3u8' : '',
+        autoplay: true,
+        muted: true,
+        setting: true,
+        pip: true,
+        fullscreenWeb: true,
+        customType: {
+          m3u8: (video, url, artInstance) => {
+            if (Hls.isSupported()) {
+              if (artInstance.hls) artInstance.hls.destroy()
+              const hls = new Hls()
+              hls.loadSource(url)
+              hls.attachMedia(video)
+              artInstance.hls = hls
+              artInstance.on('destroy', () => hls.destroy())
+            } else if (video.canPlayType('application/vnd.apple.mpegurl')) {
+              video.src = url
+            } else {
+              artInstance.notice.show = 'Format HLS tidak didukung browser ini'
+            }
+          },
+        },
+      })
+      artInstance = art
+
+      const start = restorePosition(kind, id, season, episode)
+      if (start > 0) {
+        art.on('ready', () => {
+          art.currentTime = start
+        })
+      }
+
+      art.on('video:timeupdate', () => {
+        if (Date.now() - lastSave >= 5000) save()
+      })
+      art.on('video:ended', () => {
+        ended = true
+        removeHistory(kind, id)
+      })
+    })()
 
     return () => {
-      if (!ended && art.currentTime > 0) save()
-      art.destroy(false)
+      cancelled = true
+      if (artInstance) {
+        if (!ended && artInstance.currentTime > 0) save()
+        artInstance.destroy(false)
+      }
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [src])
