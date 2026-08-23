@@ -220,6 +220,15 @@ describe('admin — CRUD entries', () => {
 describe('admin — TMDB search', () => {
   beforeEach(() => {
     process.env.TMDB_API_KEY = 'test-key'
+    vi.stubGlobal('fetch', vi.fn().mockResolvedValue({
+      ok: false,
+      status: 404,
+      json: async () => ({}),
+    }))
+  })
+
+  afterEach(() => {
+    vi.unstubAllGlobals()
   })
 
   it('searchTMDB returns [] for empty query', async () => {
@@ -228,8 +237,7 @@ describe('admin — TMDB search', () => {
   })
 
   it('fetchTMDBTitle returns "" on non-ok response', async () => {
-    // No actual fetch — will fail. This tests the error path returns ''.
-    // A proper mock would intercept global fetch.
+    // Mocked fetch returns ok:false, so error path returns empty.
     const title = await admin.fetchTMDBTitle(999999, 'movie')
     expect(title).toBe('')
   })
