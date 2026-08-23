@@ -1,3 +1,4 @@
+import React from 'react'
 import { useRef } from 'react'
 import PosterCard from './PosterCard'
 import { keyOf, mediaTypeOf } from '../lib/utils'

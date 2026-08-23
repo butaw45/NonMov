@@ -1,3 +1,4 @@
+import React from 'react'
 // Kicker: eyebrow "NO. xxxxx · LABEL" — mono, kecil, uppercase.
 // Presentasional murni — tidak ada hook, routing, atau side-effect.
 export default function Kicker({ no, label }) {

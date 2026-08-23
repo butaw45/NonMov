@@ -1,3 +1,4 @@
+import React from 'react'
 import { Link } from 'react-router-dom'
 import { img } from '../lib/tmdb'
 import { titleOf, yearOf, mediaTypeOf, ratingOf, cx } from '../lib/utils'

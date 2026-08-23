@@ -1,3 +1,4 @@
+import React from 'react'
 // Logo LAYAR: ikon layar bioskop + wordmark.
 
 export default function Logo({ withWord = true, height = 30 }) {
