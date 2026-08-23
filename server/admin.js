@@ -206,7 +206,12 @@ export function updateEntry(id, patch) {
   if (patch.video_type !== undefined && validated) next.video_type = validated.video_type
   if (patch.video_provider !== undefined && validated) next.video_provider = validated.video_provider
   if (patch.episodes !== undefined) next.episodes = patch.episodes
-  if (normalizedProviders !== undefined) next.providers = normalizedProviders
+  if (normalizedProviders !== undefined) {
+  next.providers = normalizedProviders
+  delete next.video_url
+  delete next.video_type
+  delete next.video_provider
+}
 
   next.updated_at = new Date().toISOString()
   store.entries[idx] = next

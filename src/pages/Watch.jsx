@@ -228,7 +228,7 @@ export default function Watch() {
               </select>
             </div>
           )}
-          {active?.type === 'embed' ? (
+          {!srcQuery && active?.type === 'embed' ? (
             <div className="player-shell">
               <iframe
                 className="player-box"
@@ -241,7 +241,7 @@ export default function Watch() {
                 title={active.label}
               />
             </div>
-          ) : active?.video_type === 'embed' ? (
+          ) : !srcQuery && active?.video_type === 'embed' ? (
             <div className="player-shell">
               <iframe className="player-box" src={active.video_url} allowFullScreen title={active.label || 'embed'} />
             </div>

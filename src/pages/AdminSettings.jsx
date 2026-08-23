@@ -11,6 +11,7 @@ export default function AdminSettings() {
   const [loading, setLoading] = useState(true)
   const [saving, setSaving] = useState(false)
   const [error, setError] = useState('')
+  const [addError, setAddError] = useState('')
   const [saved, setSaved] = useState(false)
 
   // State sementara untuk form "Tambah Provider"
@@ -56,12 +57,11 @@ export default function AdminSettings() {
   }
 
   // Tambah provider baru ke daftar (id dibuat server saat Simpan).
-  function onAddProvider(e) {
-    e.preventDefault()
-    setError('')
+  const onAddProvider = () => {
+    setAddError('')
     const validationError = validateTemplate(addMovieUrl, addTvUrl, addMediaType)
     if (validationError) {
-      setError(validationError)
+      setAddError(validationError)
       return
     }
     setProviders([
@@ -300,6 +300,7 @@ export default function AdminSettings() {
         )}
 
         <h4>Tambah Provider</h4>
+        {addError && <div className="error-box">{addError}</div>}
         <div className="provider-form">
           <div className="form-row">
             <label>

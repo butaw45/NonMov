@@ -1,6 +1,6 @@
 # PRD: Platform Katalog & Streaming Film/Series (Berbasis TMDB)
 
-> **Status dokumen (diperbarui 2026-08-17):** PRD ini sudah di-amend agar mencerminkan
+> **Status dokumen (diperbarui 2026-08-23):** PRD ini sudah di-amend agar mencerminkan
 > fitur yang terimplementasi. Bagian yang berubah dari PRD asli ditandai **[AMEND]**.
 > Riwayat implementasi per fitur: lihat PR/issue yang dirujuk di catatan perubahan.
 
@@ -136,8 +136,8 @@ flowchart TD
 
 ### P1 — Should Have
 1. **Watchlist/simpan favorit** — ✅ done (browser-local, `src/lib/watchlist.js`)
-2. **Rekomendasi personalisasi** — ⬜ belum
-3. **Filter lanjutan** — ⬜ belum
+2. **Rekomendasi personalisasi** — ✅ done (issue #23; PR #26 — multi-seed scoring dari sejarah & watchlist, skeleton, fallback)
+3. **Filter lanjutan** — ✅ done (issue #24; PR #27 — rating slider, negara, debounce, collision fix, reset)
 
 ### P2 — Could Have
 1. **Continue watching** — ✅ done (issue #2; `src/lib/history.js`, resume posisi; TV resume
@@ -163,7 +163,7 @@ flowchart TD
 - **Lagging:** retention — viewer kembali dalam 7/30 hari.
 
 ## Open Questions
-- Nama produk/brand belum ditentukan. ✅ terselesaikan sebagian: **Seluloid**.
+- Nama produk/brand: **LAYAR** (rebrand selesai PR #28, #30, #31 — palet biru-tinta + kuning arsip, DM Serif Display).
 - ~~Vendor layanan streaming HLS/DASH belum dipilih.~~ ✅ **[AMEND]** diputuskan: tidak pakai
   layanan upload HLS/DASH; konten self ditautkan via URL; sumber tambahan via pool embed global.
 - Perlu sistem akun viewer untuk watchlist lintas device, atau cukup browser-local? — tetap terbuka.
@@ -175,7 +175,12 @@ Tanpa target tanggal kaku. P0 MVP sudah terlampaui; fitur provider & admin setti
 asli sudah diimplementasi (lihat tabel status di atas).
 
 ## Catatan Perubahan (amend)
-- **2026-08-17:** Amend PRD agar sinkron dengan implementasi.
+* **2026-08-23:** Update status fitur dari dev branch.
+  - Fitur selesai baru: rekomendasi personalisasi (issue #23, PR #26), filter lanjutan rating+negara (issue #24, PR #27).
+  - Rebrand LAYAR: tokens+brand (PR #28), komponen presentasional (PR #30), CSS merge+cleanup (PR #31).
+  - Perbaiki agent_summary YAML: rekomendasi & filter → done; nama brand → Layar.
+
+* **2026-08-17:** Amend PRD agar sinkron dengan implementasi.
   - Menambah dimensi provider: registri (`resolveProviders`), pool provider global, selector di
     player, kelola di `/admin/settings` (edit inline + reorder).
   - Menambah cache TMDB backend (non-fungsional).
@@ -200,8 +205,8 @@ agent_summary:
     - "Pool provider global (embed URL template) + selector di player + kelola di /admin/settings (done)"
   nice_to_have:
     - "Watchlist/simpan favorit (done, browser-local)"
-    - "Rekomendasi personalisasi (belum)"
-    - "Filter lanjutan (genre, tahun, rating) (belum)"
+    - "Rekomendasi personalisasi (done, issue #23)"
+    - "Filter lanjutan rating slider+negara (done, issue #24)"
     - "Continue watching + resume posisi (done)"
     - "Pilihan subtitle/bahasa (belum)"
   data_entities:
